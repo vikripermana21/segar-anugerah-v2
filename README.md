@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Segar Anugerah v2
 
-## Getting Started
+Toko online ikan &amp; sayur Segar Anugerah. Next.js (App Router) + Postgres + Drizzle.
 
-First, run the development server:
+Dokumen acuan: [`docs/PRD.md`](docs/PRD.md) (v1.1). Semua keputusan produk ada di sana;
+README ini hanya cara menjalankan.
+
+## Status
+
+| Fase | Isi | Status |
+|---|---|---|
+| 1 | Fondasi: repo, skema, auth, seed, deploy | 🟡 berjalan — skema + auth admin selesai, deploy belum |
+| 2 | Katalog & admin katalog | ⏸ belum |
+| 3 | Akun pembeli & keranjang | ⏸ belum |
+| 4 | Midtrans & pesanan | ⏸ belum |
+| 5 | Dashboard pesanan & laporan | ⏸ belum |
+| 6 | Uji & peluncuran | ⏸ belum |
+
+## Menjalankan
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env.local     # isi DATABASE_URL, SESSION_SECRET, SEED_ADMIN_*
+createdb segar_anugerah_v2
+pnpm db:migrate
+pnpm db:seed
+pnpm dev                        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Masuk admin di `/admin/login` dengan nomor dan sandi dari `SEED_ADMIN_*` di `.env.local`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Perintah
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Perintah | Guna |
+|---|---|
+| `pnpm dev` | Server pengembangan |
+| `pnpm build` | Build produksi |
+| `pnpm typecheck` | Periksa tipe tanpa build |
+| `pnpm lint` | ESLint |
+| `pnpm db:generate` | Buat migrasi dari perubahan `src/db/schema.ts` |
+| `pnpm db:migrate` | Terapkan migrasi |
+| `pnpm db:seed` | Buat admin pertama + pengaturan toko (aman diulang) |
+| `pnpm db:studio` | Drizzle Studio (lihat isi database) |
 
-## Learn More
+## Peta folder
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── (store)/          # toko publik
+│   └── (admin)/admin/    # admin, dijaga middleware + sesi database
+├── db/
+│   ├── schema.ts         # 15 tabel
+│   └── index.ts          # koneksi Drizzle
+├── lib/auth.ts           # sesi cookie httpOnly, bcrypt, normalisasi nomor
+└── middleware.ts         # penjaga rute /admin
+scripts/seed.ts           # admin pertama + pengaturan toko
+drizzle/                  # migrasi SQL
+docs/PRD.md               # PRD v1.1
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Catatan
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Kode berbahasa Inggris; teks antarmuka berbahasa Indonesia.
+- `.env.local` tidak masuk git. Jangan pernah menaruh kunci Midtrans di repo.
+- Webhook Midtrans tidak bisa menjangkau `localhost`; saat Fase 4 pakai URL preview Vercel.
+- Nomor HP dinormalkan ke format `08…` dan disimpan unik.
