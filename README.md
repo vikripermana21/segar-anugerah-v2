@@ -146,6 +146,9 @@ design/                       # .pen, wireframe, dan artefak desain
   dengan tanda tangan yang dihitung dari server key.
 - Jadwal kedaluwarsa di `vercel.json` jalan tiap 15 menit (batas Hobby). PRD meminta 5 menit; di
   Pro cukup ganti menjadi `*/5 * * * *`.
+- Midtrans memisahkan **Server Key** (auth API/Snap) dari **Signature Secret Key** (tanda tangan
+  webhook). Keduanya wajib ada di environment: `MIDTRANS_SERVER_KEY` dan
+  `MIDTRANS_SIGNATURE_KEY`.
 - `CRON_SECRET` wajib ada di environment Vercel. Rute cron menolak permintaan tanpa header
   `Authorization: Bearer <CRON_SECRET>`.
 - Nomor HP dinormalkan ke format `08…` dan disimpan unik.

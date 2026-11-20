@@ -88,7 +88,10 @@ export function verifySignature(payload: {
   gross_amount: string;
   signature_key: string;
 }): boolean {
-  const serverKey = process.env.MIDTRANS_SERVER_KEY;
+  // Dashboard Midtrans memisahkan Signature Secret Key dari Server Key.
+  // Notifikasi ditandatangani dengan Signature Secret Key.
+  const serverKey =
+    process.env.MIDTRANS_SIGNATURE_KEY ?? process.env.MIDTRANS_SERVER_KEY;
   if (!serverKey) return false;
 
   const expected = createHash("sha512")

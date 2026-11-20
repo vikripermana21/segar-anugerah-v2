@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@/db";
@@ -98,26 +98,18 @@ export async function POST(request: Request) {
     .limit(1);
   const existing = found[0] ?? null;
 
-  const inserted = await db
-    .insert(paymentEvent)
-    .values({
+  if (!signatureValid) {
+    // Percobaan gagal tetap dicatat, tetapi diberi akhiran supaya tidak
+    // menempati kunci unik event dan memblokir notifikasi sah berikutnya.
+    await db.insert(paymentEvent).values({
       orderId: existing?.id ?? null,
       provider: "midtrans",
       eventType: event.transaction_status,
-      transactionId: event.transaction_id ?? null,
+      transactionId: `${event.transaction_id ?? "tanpa-id"}:invalid:${Date.now()}`,
       payload: event,
-      signatureValid,
-    })
-    .onConflictDoNothing()
-    .returning({ id: paymentEvent.id });
-
-  if (!signatureValid) {
-    if (inserted[0]) {
-      await db
-        .update(paymentEvent)
-        .set({ processedAt: new Date() })
-        .where(eq(paymentEvent.id, inserted[0].id));
-    }
+      signatureValid: false,
+      processedAt: new Date(),
+    });
     console.warn("webhook tanda tangan tidak valid", event.order_id);
     return Response.json({ ok: false, message: "Tanda tangan tidak valid." }, { status: 401 });
   }
@@ -126,12 +118,54 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, message: "Pesanan tidak dikenal." }, { status: 404 });
   }
 
-  // Event yang sama pernah diproses: balas 200 supaya Midtrans berhenti mengulang.
-  if (!inserted[0]) {
-    return Response.json({ ok: true, duplicate: true }, { status: 200 });
-  }
+  const inserted = await db
+    .insert(paymentEvent)
+    .values({
+      orderId: existing.id,
+      provider: "midtrans",
+      eventType: event.transaction_status,
+      transactionId: event.transaction_id ?? null,
+      payload: event,
+      signatureValid: true,
+    })
+    .onConflictDoNothing()
+    .returning({ id: paymentEvent.id });
 
-  const eventId = inserted[0].id;
+  let eventId = inserted[0]?.id;
+
+  if (!eventId) {
+    // Notifikasi yang dulu ditolak karena kunci salah boleh diproses ulang
+    // setelah kuncinya diperbaiki.
+    const prior =
+      event.transaction_id && existing
+        ? await db
+            .select()
+            .from(paymentEvent)
+            .where(
+              and(
+                eq(paymentEvent.eventType, event.transaction_status),
+                eq(paymentEvent.transactionId, event.transaction_id),
+              ),
+            )
+            .limit(1)
+        : [];
+
+    const row = prior[0];
+    if (!row || row.signatureValid) {
+      return Response.json({ ok: true, duplicate: true }, { status: 200 });
+    }
+
+    await db
+      .update(paymentEvent)
+      .set({
+        orderId: existing.id,
+        payload: event,
+        signatureValid: true,
+        processedAt: null,
+      })
+      .where(eq(paymentEvent.id, row.id));
+    eventId = row.id;
+  }
 
   if (Number(event.gross_amount) !== existing.total) {
     await db
