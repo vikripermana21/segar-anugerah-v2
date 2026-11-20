@@ -6,8 +6,9 @@ import { Clock, Info, MapPin, ShoppingBag, Truck } from "lucide-react";
 
 import type { AddressRow, DeliveryArea } from "@/lib/address-types";
 import type { OrderDetail } from "@/lib/order-view";
-import { rupiah, shippingFor } from "@/lib/store-data";
-import { useCart } from "../cart";
+import { shippingFor } from "@/lib/shipping";
+import { rupiah } from "@/lib/store-data";
+import { useCart, useStoreSettings } from "../cart";
 import CheckoutSteps from "./checkout-steps";
 import { EmptyState } from "./ui";
 
@@ -33,6 +34,7 @@ export default function PaymentView(props: Props) {
   const existing = props.order ?? null;
   const checkout = props.checkout ?? null;
   const { lines, count, subtotal, ready, clear } = useCart();
+  const settings = useStoreSettings();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<PayError | null>(null);
   const idempotencyKey = useRef<string | null>(null);
@@ -53,7 +55,7 @@ export default function PaymentView(props: Props) {
 
   const outLines = existing ? [] : lines.filter((line) => line.out);
 
-  const estimate = shippingFor(subtotal, checkout?.area.fee ?? 0);
+  const estimate = shippingFor(subtotal, checkout?.area.fee ?? 0, settings);
   const subtotalValue = existing ? existing.subtotal : subtotal;
   const shippingFee = existing ? existing.shippingFee : estimate.fee;
   const shippingDiscount = existing ? existing.shippingDiscount : estimate.discount;
@@ -279,7 +281,7 @@ export default function PaymentView(props: Props) {
                     : "Dikirim sesuai jadwal toko"}
                 </p>
                 <p className="mt-0.5 text-[10.5px] leading-[1.4] text-ink-3">
-                  Pesanan setelah pukul 16.00 WIB dikirim besok.
+                  Pesanan setelah pukul {settings.cutoffHour}.00 WIB dikirim besok.
                 </p>
               </div>
             </div>

@@ -11,11 +11,6 @@ export const storeFacts = {
   area: "Cilandak · Jakarta Selatan",
   phone: "0812-3456-789",
   whatsapp: "628123456789",
-  address: "Jl. Melati No. 12, Cilandak, Jakarta Selatan 12430",
-  cutoffHour: 16,
-  freeShippingUntil: "31 Des 2026",
-  freeShippingEndsAt: "2026-12-31T23:59:59+07:00",
-  freeShippingMinSubtotal: 0,
 };
 
 export function rupiah(value: number): string {
@@ -265,57 +260,3 @@ export function addressById(id: string): Address {
   return addresses.find((address) => address.id === id) ?? addresses[0];
 }
 
-/** Gratis ongkir peluncuran aktif sampai tanggal di pengaturan toko. */
-export function freeShippingActive(now = new Date()): boolean {
-  return now.getTime() <= new Date(storeFacts.freeShippingEndsAt).getTime();
-}
-
-export function shippingFor(subtotal: number, zoneFee: number, now = new Date()) {
-  const active = freeShippingActive(now);
-  const eligible = active && subtotal >= storeFacts.freeShippingMinSubtotal;
-  const discount = eligible ? zoneFee : 0;
-  return {
-    fee: zoneFee,
-    discount,
-    total: subtotal + zoneFee - discount,
-    active,
-    eligible,
-  };
-}
-
-const jakartaDate = new Intl.DateTimeFormat("id-ID", {
-  timeZone: "Asia/Jakarta",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
-const jakartaTime = new Intl.DateTimeFormat("id-ID", {
-  timeZone: "Asia/Jakarta",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-const jakartaHour = new Intl.DateTimeFormat("en-GB", {
-  timeZone: "Asia/Jakarta",
-  hour: "2-digit",
-  hour12: false,
-});
-
-/** Tanggal kirim mengikuti cut-off 16.00 WIB (PRD §3.3). */
-export function deliveryWindow(now = new Date()) {
-  const hour = Number(jakartaHour.format(now));
-  const shipsToday = hour < storeFacts.cutoffHour;
-  const date = new Date(now.getTime() + (shipsToday ? 0 : 24 * 60 * 60 * 1000));
-  return {
-    shipsToday,
-    dateLabel: jakartaDate.format(date),
-    timeLabel: jakartaTime.format(now).replace(".", "."),
-  };
-}
-
-/** Waktu kedaluwarsa pembayaran: 30 menit setelah pesanan dibuat (PRD §3.5). */
-export function expiryTime(now = new Date()): string {
-  return jakartaTime.format(new Date(now.getTime() + 30 * 60 * 1000)).replace(".", ".");
-}

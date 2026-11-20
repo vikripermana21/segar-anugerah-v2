@@ -7,7 +7,8 @@ import { ArrowRight, ChevronDown, MapPin, ShoppingBag, Truck } from "lucide-reac
 
 import type { AddressRow, DeliveryArea } from "@/lib/address-types";
 import { freeShippingLabel } from "@/lib/catalog-types";
-import { deliveryWindow, rupiah, shippingFor } from "@/lib/store-data";
+import { deliveryWindow, shippingFor } from "@/lib/shipping";
+import { rupiah } from "@/lib/store-data";
 import { useCart, useStoreSettings } from "../cart";
 import CheckoutSteps from "./checkout-steps";
 import { EmptyState, FreeShippingNote } from "./ui";
@@ -32,8 +33,8 @@ export default function CheckoutForm({
   useEffect(() => {
     // Tanggal dikirim baru diketahui di perangkat, bukan saat prerender.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDelivery(deliveryWindow());
-  }, []);
+    setDelivery(deliveryWindow(settings.cutoffHour));
+  }, [settings.cutoffHour]);
 
   if (!ready) {
     return <main className="page pt-2"><div className="h-[120px] animate-pulse rounded-2xl bg-surface-2" /></main>;
@@ -71,7 +72,7 @@ export default function CheckoutForm({
 
   const area =
     areas.find((option) => option.kecamatan === kecamatan) ?? areas[0] ?? null;
-  const shipping = shippingFor(subtotal, area?.fee ?? 0);
+  const shipping = shippingFor(subtotal, area?.fee ?? 0, settings);
 
   function selectAddress(address: AddressRow) {
     setAddressId(address.id);
@@ -223,7 +224,7 @@ export default function CheckoutForm({
                     {delivery ? `, ${delivery.dateLabel}` : ""}
                   </p>
                   <p className="mt-0.5 text-[10.5px] leading-[1.4] text-ink-3">
-                    Pesanan setelah pukul 16.00 WIB dikirim besok.
+                    Pesanan setelah pukul {settings.cutoffHour}.00 WIB dikirim besok.
                   </p>
                 </div>
               </div>
