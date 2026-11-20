@@ -13,7 +13,7 @@ dunia visual. Sumber visual toko: [`design/segar-anugerah-client.pen`](design/se
 | — | Permukaan toko (desain `.pen`): 13 layar + keadaan kosong/memuat | 🟡 katalog, akun, dan alamat dari database; pesanan masih contoh |
 | 2 | Katalog & admin katalog | ✅ admin katalog + toko membaca katalog database |
 | 3 | Akun pembeli & keranjang | ✅ akun, alamat, checkout zona DB; keranjang tetap di perangkat |
-| 4 | Midtrans & pesanan | 🟡 pesanan, Snap, webhook, jeda bayar selesai; admin pesanan di Fase 5 |
+| 4 | Midtrans & pesanan | ✅ pesanan, kunci stok, Snap sandbox, webhook, kedaluwarsa |
 | 5 | Dashboard pesanan & laporan | ⏸ belum |
 | 6 | Uji & peluncuran | ⏸ belum |
 
