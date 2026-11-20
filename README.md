@@ -48,6 +48,14 @@ npm run db:seed
 `.env.staging` tidak masuk git. Isinya `DATABASE_URL` Neon pooled, `SEED_ADMIN_*` staging, dan
 kunci Midtrans sandbox.
 
+## Alur kerja per fase
+
+- `main` selalu stabil dan jadi branch produksi Vercel (staging URL sekarang).
+- Setiap fase dikerjakan di branch sendiri: `fase-<n>-<ringkas>`, mis. `fase-4-pesanan-pembayaran`.
+- Push branch fase membuat preview deployment. Merge ke `main` hanya setelah fase selesai diuji.
+- Preview memakai database staging yang sama. Jalankan migrasi ke Neon **sebelum** push kode yang
+  butuh kolom baru, atau preview akan gagal saat query.
+
 ## Rute toko
 
 | Rute | Isi |
