@@ -184,6 +184,8 @@ export const order = pgTable("orders", {
   addressSnapshot: jsonb("address_snapshot").notNull(),
   notes: text("notes"),
   midtransOrderId: text("midtrans_order_id").notNull().unique(),
+  /** Kunci dari klien: permintaan ulang dengan kunci sama tidak membuat pesanan baru. */
+  idempotencyKey: text("idempotency_key").unique(),
   midtransTransactionId: text("midtrans_transaction_id"),
   paymentMethod: text("payment_method"),
   paidAt: timestamp("paid_at", { withTimezone: true }),
