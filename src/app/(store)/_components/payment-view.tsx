@@ -1,70 +1,46 @@
 "use client";
 
 import Link from "./transition-link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Clock, Info, MapPin, ShoppingBag, Truck } from "lucide-react";
+
 import type { AddressRow, DeliveryArea } from "@/lib/address-types";
-import {
-  addressById,
-  deliveryWindow,
-  expiryTime,
-  orderByNumber,
-  rupiah,
-  shippingFor,
-  zoneByName,
-} from "@/lib/store-data";
+import type { OrderDetail } from "@/lib/order-view";
+import { rupiah, shippingFor } from "@/lib/store-data";
 import { useCart } from "../cart";
 import CheckoutSteps from "./checkout-steps";
 import { EmptyState } from "./ui";
 
-function newOrderNumber(now: Date): string {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Jakarta",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00";
-  const yymmdd = `${get("year").slice(2)}${get("month")}${get("day")}`;
-  const suffix = String(Math.floor(1000 + Math.random() * 9000));
-  return `SA-${yymmdd}-${suffix}`;
-}
-
 export type PaymentCheckout = { address: AddressRow; area: DeliveryArea };
 
-export default function PaymentView({ checkout }: { checkout?: PaymentCheckout | null }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { lines, count, subtotal, ready } = useCart();
-  const [processing, setProcessing] = useState(false);
-  const [expiry, setExpiry] = useState("");
-  const [delivery, setDelivery] = useState<{ shipsToday: boolean; dateLabel: string } | null>(null);
-  const timer = useRef<number | null>(null);
+type Props =
+  | { order: OrderDetail; checkout?: undefined; note?: undefined }
+  | { checkout: PaymentCheckout; note?: string; order?: undefined };
 
-  const retryOrder = orderByNumber(searchParams.get("order") ?? "");
-  const usingOrder = Boolean(retryOrder);
-  const address = checkout?.address
-    ? {
-        label: checkout.address.label,
-        kecamatan: checkout.address.kecamatan,
-        addressLine: checkout.address.addressLine,
-      }
-    : addressById(searchParams.get("address") ?? retryOrder?.addressId ?? "rumah");
-  const zoneName = checkout
-    ? checkout.area.kecamatan
-    : zoneByName(searchParams.get("zone") ?? address.kecamatan).name;
-  const zoneFee = checkout
-    ? checkout.area.fee
-    : zoneByName(searchParams.get("zone") ?? address.kecamatan).fee;
-  const note = searchParams.get("note") ?? "";
-  const paySubtotal = retryOrder ? retryOrder.subtotal : subtotal;
-  const shipping = shippingFor(paySubtotal, zoneFee);
-  const outLines = usingOrder ? [] : lines.filter((line) => line.out);
-  const payLines = retryOrder
-    ? retryOrder.items.map((item) => ({
-        key: `${item.name}-${item.variant}`,
-        label: `${item.quantity} × ${item.name}${item.variant ? ` ${item.variant}` : ""}`,
+type PayError = { message: string; outOfStock?: string[] };
+
+async function postJson<T>(url: string, body: unknown): Promise<{ status: number; data: T }> {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = (await response.json().catch(() => ({}))) as T;
+  return { status: response.status, data };
+}
+
+export default function PaymentView(props: Props) {
+  const existing = props.order ?? null;
+  const checkout = props.checkout ?? null;
+  const { lines, count, subtotal, ready, clear } = useCart();
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<PayError | null>(null);
+  const idempotencyKey = useRef<string | null>(null);
+
+  const playableLines = existing
+    ? existing.items.map((item) => ({
+        key: item.key,
+        label: `${item.quantity} × ${item.name} ${item.variant}`,
         amount: item.lineTotal,
       }))
     : lines
@@ -75,22 +51,19 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
           amount: line.lineTotal,
         }));
 
-  useEffect(() => {
-    // Waktu dihitung setelah mount: jam server dan jam perangkat bisa berbeda,
-    // dan teks waktu tidak boleh memecah hidrasi.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setExpiry(expiryTime());
-    setDelivery(deliveryWindow());
-    return () => {
-      if (timer.current) window.clearTimeout(timer.current);
-    };
-  }, []);
+  const outLines = existing ? [] : lines.filter((line) => line.out);
 
-  if (!ready) {
+  const estimate = shippingFor(subtotal, checkout?.area.fee ?? 0);
+  const subtotalValue = existing ? existing.subtotal : subtotal;
+  const shippingFee = existing ? existing.shippingFee : estimate.fee;
+  const shippingDiscount = existing ? existing.shippingDiscount : estimate.discount;
+  const total = existing ? existing.total : estimate.total;
+
+  if (!existing && !ready) {
     return <main className="page pt-2"><div className="h-[120px] animate-pulse rounded-2xl bg-surface-2" /></main>;
   }
 
-  if (count === 0 && !usingOrder) {
+  if (!existing && count === 0) {
     return (
       <main className="page pb-10 pt-1">
         <EmptyState
@@ -105,16 +78,72 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
     );
   }
 
-  function pay() {
-    if (processing || payLines.length === 0) return;
+  const address = existing
+    ? {
+        label: existing.address.label,
+        kecamatan: existing.address.kecamatan,
+        addressLine: existing.address.addressLine,
+      }
+    : {
+        label: checkout!.address.label,
+        kecamatan: checkout!.area.kecamatan,
+        addressLine: checkout!.address.addressLine,
+      };
+
+  async function pay() {
+    if (processing) return;
+    setError(null);
     setProcessing(true);
-    const total = shipping.total;
-    timer.current = window.setTimeout(() => {
-      const number = newOrderNumber(new Date());
-      const params = new URLSearchParams({ order: number, total: String(total) });
-      if (!usingOrder) params.set("paid", "1");
-      router.push(`/checkout/result?${params.toString()}`);
-    }, 1400);
+
+    try {
+      let orderNumber = existing?.number;
+
+      if (!orderNumber) {
+        const key = idempotencyKey.current ?? crypto.randomUUID();
+        idempotencyKey.current = key;
+
+        const created = await postJson<
+          | { ok: true; orderNumber: string }
+          | { ok: false; code?: string; message?: string; outOfStock?: string[] }
+        >("/api/checkout", {
+          addressId: checkout!.address.id,
+          kecamatan: checkout!.area.kecamatan,
+          city: checkout!.area.city,
+          note: props.note || undefined,
+          idempotencyKey: key,
+          items: lines
+            .filter((line) => !line.out)
+            .map((line) => ({ variantId: line.variant.id, quantity: line.quantity })),
+        });
+
+        if (!created.data.ok) {
+          setError({
+            message: created.data.message ?? "Pesanan gagal dibuat.",
+            outOfStock: created.data.outOfStock,
+          });
+          setProcessing(false);
+          return;
+        }
+        orderNumber = created.data.orderNumber;
+      }
+
+      const snap = await postJson<{ ok: boolean; redirectUrl?: string; message?: string }>(
+        "/api/payments/snap",
+        { orderNumber },
+      );
+
+      if (!snap.data.ok || !snap.data.redirectUrl) {
+        setError({ message: snap.data.message ?? "Pembayaran gagal dibuka." });
+        setProcessing(false);
+        return;
+      }
+
+      if (!existing) clear();
+      window.location.assign(snap.data.redirectUrl);
+    } catch {
+      setError({ message: "Jaringan bermasalah. Coba lagi." });
+      setProcessing(false);
+    }
   }
 
   return (
@@ -164,7 +193,7 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
             <section className="rounded-2xl border border-border bg-surface p-4">
               <h2 className="text-[12.5px] font-bold">Barang</h2>
               <ul className="mt-2.5 space-y-2">
-                {payLines.map((line) => (
+                {playableLines.map((line) => (
                   <li
                     key={line.key}
                     className="flex items-center justify-between gap-3 text-[12px]"
@@ -174,9 +203,14 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
                   </li>
                 ))}
               </ul>
-              {note ? (
+              {props.note ? (
                 <p className="mt-2.5 border-t border-border pt-2.5 text-[10px] leading-[1.45] text-ink-3">
-                  Catatan kurir: {note}
+                  Catatan kurir: {props.note}
+                </p>
+              ) : null}
+              {existing?.note ? (
+                <p className="mt-2.5 border-t border-border pt-2.5 text-[10px] leading-[1.45] text-ink-3">
+                  Catatan kurir: {existing.note}
                 </p>
               ) : null}
             </section>
@@ -187,12 +221,25 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
                   <Info size={14} />
                 </span>
                 <div>
-                  <p className="text-[11.5px] font-bold text-ink-2">Pesanan sedang dibuat</p>
+                  <p className="text-[11.5px] font-bold text-ink-2">Menyiapkan pembayaran</p>
                   <p className="mt-0.5 text-[10.5px] leading-[1.45] text-ink-2">
-                    Jangan tutup halaman ini. Pesanan dan penguncian stok dibuat dalam satu
-                    transaksi.
+                    Jangan tutup halaman ini. Stok dikunci saat pesanan dibuat.
                   </p>
                 </div>
+              </div>
+            ) : null}
+
+            {error ? (
+              <div role="alert" className="rounded-[14px] bg-danger-soft px-3 py-3">
+                <p className="text-[11.5px] font-bold text-danger">{error.message}</p>
+                {error.outOfStock?.length ? (
+                  <p className="mt-0.5 text-[10.5px] leading-[1.45] text-[#7a4638]">
+                    Stok kurang: {error.outOfStock.join(", ")}.{" "}
+                    <Link href="/cart" className="font-bold text-danger">
+                      Ubah keranjang
+                    </Link>
+                  </p>
+                ) : null}
               </div>
             ) : null}
 
@@ -201,24 +248,24 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
               <dl className="mt-2.5 space-y-2">
                 <div className="flex items-center justify-between gap-3 text-[12px]">
                   <dt className="text-ink-2">Subtotal</dt>
-                  <dd className="tabular font-medium">{rupiah(paySubtotal)}</dd>
+                  <dd className="tabular font-medium">{rupiah(subtotalValue)}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3 text-[12px]">
-                  <dt className="text-ink-2">Ongkir {zoneName}</dt>
-                  <dd className="tabular font-medium">{rupiah(shipping.fee)}</dd>
+                  <dt className="text-ink-2">Ongkir {address.kecamatan}</dt>
+                  <dd className="tabular font-medium">{rupiah(shippingFee)}</dd>
                 </div>
-                {shipping.discount > 0 ? (
+                {shippingDiscount > 0 ? (
                   <div className="flex items-center justify-between gap-3 text-[12px]">
                     <dt className="text-ink-2">Potongan gratis ongkir</dt>
                     <dd className="tabular font-medium text-brand">
-                      −{rupiah(shipping.discount)}
+                      −{rupiah(shippingDiscount)}
                     </dd>
                   </div>
                 ) : null}
                 <div className="h-px bg-border" />
                 <div className="flex items-center justify-between gap-3 text-[15px]">
                   <dt className="text-ink-2">Bayar</dt>
-                  <dd className="tabular font-bold">{rupiah(shipping.total)}</dd>
+                  <dd className="tabular font-bold">{rupiah(total)}</dd>
                 </div>
               </dl>
             </section>
@@ -227,8 +274,9 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
               <Truck size={15} className="mt-0.5 shrink-0 text-ink-2" />
               <div>
                 <p className="text-[11.5px] font-bold">
-                  Dikirim {delivery?.shipsToday === false ? "besok" : "hari ini"}
-                  {delivery ? `, ${delivery.dateLabel}` : ""}
+                  {existing
+                    ? `Dikirim ${existing.deliveryDateLabel}`
+                    : "Dikirim sesuai jadwal toko"}
                 </p>
                 <p className="mt-0.5 text-[10.5px] leading-[1.4] text-ink-3">
                   Pesanan setelah pukul 16.00 WIB dikirim besok.
@@ -263,8 +311,10 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
               <div>
                 <p className="text-[12px] font-bold text-accent">Bayar dalam 30 menit</p>
                 <p className="mt-0.5 text-[11px] leading-[1.45] text-brand">
-                  Stok ditahan sampai {expiry || "30 menit"} WIB. Lewat itu pesanan kedaluwarsa dan
-                  stok dilepas.
+                  {existing?.expiresLabel
+                    ? `Stok ditahan sampai ${existing.expiresLabel}.`
+                    : "Stok ditahan 30 menit setelah pesanan dibuat."}{" "}
+                  Lewat itu pesanan kedaluwarsa dan stok dilepas.
                 </p>
               </div>
             </div>
@@ -279,7 +329,7 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface">
         <div className="page py-3 pb-[calc(18px+env(safe-area-inset-bottom))]">
-          {payLines.length === 0 ? (
+          {playableLines.length === 0 ? (
             <Link href="/cart" className="btn-secondary w-full">
               Kembali ke keranjang
             </Link>
@@ -296,7 +346,7 @@ export default function PaymentView({ checkout }: { checkout?: PaymentCheckout |
                   Memproses…
                 </>
               ) : (
-                `Bayar ${rupiah(shipping.total)}`
+                `Bayar ${rupiah(total)}`
               )}
             </button>
           )}
