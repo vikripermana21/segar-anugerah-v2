@@ -62,6 +62,78 @@ async function main() {
     console.log("Pengaturan toko dibuat.");
   }
 
+  // Katalog contoh: hanya mengisi baris yang belum ada, jadi perubahan admin
+  // tidak tertimpa saat seed dijalankan ulang.
+  const { seedCategories, seedProducts } = await import("./catalog-data");
+  const { category, product, productImage, productVariant } = await import("../src/db/schema");
+
+  const existingCategories = await db.select({ slug: category.slug, id: category.id }).from(category);
+  const categoryBySlug = new Map(existingCategories.map((row) => [row.slug, row.id]));
+
+  for (const item of seedCategories) {
+    if (categoryBySlug.has(item.slug)) continue;
+
+    const inserted = await db
+      .insert(category)
+      .values({
+        name: item.name,
+        slug: item.slug,
+        description: item.description,
+        imageUrl: item.image,
+        sortOrder: item.sortOrder,
+      })
+      .returning({ id: category.id });
+
+    categoryBySlug.set(item.slug, inserted[0].id);
+    console.log(`Kategori dibuat: ${item.name}`);
+  }
+
+  const existingProducts = await db.select({ slug: product.slug }).from(product);
+  const productSlugs = new Set(existingProducts.map((row) => row.slug));
+
+  for (const item of seedProducts) {
+    if (productSlugs.has(item.slug)) continue;
+
+    const categoryId = categoryBySlug.get(item.category);
+    if (!categoryId) {
+      console.warn(`Kategori ${item.category} tidak ada — ${item.name} dilewati.`);
+      continue;
+    }
+
+    const inserted = await db
+      .insert(product)
+      .values({
+        categoryId,
+        name: item.name,
+        slug: item.slug,
+        description: item.description,
+        unitLabel: item.unit,
+      })
+      .returning({ id: product.id });
+
+    const productId = inserted[0].id;
+
+    await db.insert(productVariant).values(
+      item.variants.map((variant, index) => ({
+        productId,
+        label: variant.label,
+        price: variant.price,
+        stock: variant.stock,
+        sortOrder: index,
+      })),
+    );
+
+    await db.insert(productImage).values({
+      productId,
+      url: item.image,
+      alt: item.name,
+      isPrimary: true,
+      sortOrder: 0,
+    });
+
+    console.log(`Produk dibuat: ${item.name}`);
+  }
+
   process.exit(0);
 }
 
