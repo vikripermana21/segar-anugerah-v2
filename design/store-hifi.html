@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segar Anugerah — Katalog &amp; belanja (desain)</title>
+<style>
+/* ==========================================================================
+   Segar Anugerah — desain antarmuka toko
+   Arah: "Nota Hijau" — papan hijau toko yang memegang wilayah, kartu kertas
+   membulat, foto barang sebagai bahan, angka cetak tabular, nota bertakik.
+   ========================================================================== */
+
+@font-face{font-family:"Archivo";src:url("assets/fonts/Archivo-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Archivo";src:url("assets/fonts/Archivo-Medium.ttf") format("truetype");font-weight:500;font-display:swap}
+@font-face{font-family:"Archivo";src:url("assets/fonts/Archivo-SemiBold.ttf") format("truetype");font-weight:600;font-display:swap}
+@font-face{font-family:"Archivo";src:url("assets/fonts/Archivo-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"Archivo";src:url("assets/fonts/Archivo-ExtraBold.ttf") format("truetype");font-weight:800;font-display:swap}
+@font-face{font-family:"Courier Prime";src:url("assets/fonts/CourierPrime-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Courier Prime";src:url("assets/fonts/CourierPrime-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+
+:root{
+  /* hijau — cat toko, memegang wilayah */
+  --g-900:#00301A;
+  --g-800:#004B27;
+  --g-700:#005E32;
+  --g-600:#006F3B;
+  --g-500:#008043;
+  --g-400:#1B9A5B;
+  --g-100:#D8E9DE;
+  --g-050:#EAF2EC;
+
+  /* kertas dan tinta */
+  --paper:#F2F4EE;
+  --paper-2:#F8FAF4;
+  --card:#FFFFFF;
+  --line:#E1E6DC;
+  --line-2:#CDD6CB;
+  --ink:#10201A;
+  --ink-2:#3F5049;
+  --ink-3:#5B6D65;
+  --ink-out:#66756C;
+
+  /* cap — hanya untuk yang habis */
+  --stamp:#B3261E;
+  --stamp-wash:#FBEDEA;
+
+  /* sudut */
+  --r-xs:8px; --r-sm:12px; --r-md:16px; --r-lg:20px; --r-xl:26px; --r-2xl:32px; --r-pill:999px;
+
+  /* cahaya */
+  --sh-1:0 1px 2px rgba(9,38,25,.05), 0 4px 14px -6px rgba(9,38,25,.14);
+  --sh-2:0 2px 4px rgba(9,38,25,.06), 0 16px 32px -18px rgba(9,38,25,.38);
+  --sh-3:0 40px 80px -40px rgba(0,0,0,.75), 0 8px 24px -12px rgba(0,0,0,.5);
+
+  /* papan presentasi */
+  --board:#0B1712;
+  --board-panel:#12251B;
+  --board-line:rgba(242,244,238,.14);
+  --board-ink:#F2F4EE;
+  --board-ink-2:rgba(242,244,238,.66);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--board);color:var(--board-ink);
+  font-family:Archivo,system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+::selection{background:rgba(0,128,67,.35)}
+
+.ico{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ico-sm{width:18px;height:18px}
+.ico-xs{width:15px;height:15px}
+
+/* ===================== papan ===================== */
+.board{max-width:900px;margin:0 auto;padding:64px 24px 104px}
+
+.doc-head h1{
+  margin:0;font-size:46px;font-weight:800;line-height:1;letter-spacing:-.035em;
+}
+.doc-head p.sub{
+  margin:16px 0 0;max-width:62ch;font-size:16px;line-height:1.6;color:var(--board-ink-2);
+}
+.doc-meta{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 0}
+.doc-meta span{
+  font-family:"Courier Prime",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(242,244,238,.78);border:1px solid var(--board-line);border-radius:var(--r-pill);padding:7px 12px;
+}
+.doc-meta span.hi{color:#8FE0B4;border-color:rgba(0,128,67,.6)}
+
+.sect{margin:76px 0 0;padding-top:26px;border-top:1px solid var(--board-line)}
+.sect h2{margin:0;font-size:26px;font-weight:800;letter-spacing:-.025em;line-height:1.1}
+.sect p.lede{margin:10px 0 0;max-width:58ch;font-size:14px;line-height:1.6;color:var(--board-ink-2)}
+
+.frames{display:grid;grid-template-columns:repeat(2,390px);gap:44px 36px;justify-content:center;margin:44px 0 0}
+.frame{margin:0;display:flex;flex-direction:column;gap:14px}
+.frame .plate{
+  display:flex;align-items:baseline;gap:10px;
+  font-family:"Courier Prime",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--board-ink);
+}
+.frame .plate b{color:#8FE0B4;font-weight:400}
+.frame .plate em{margin-left:auto;font-style:normal;font-family:Archivo;font-size:11px;letter-spacing:.06em;color:var(--board-ink-2)}
+.frame figcaption{font-size:12.5px;line-height:1.6;color:var(--board-ink-2);max-width:38ch}
+.frame figcaption b{color:rgba(242,244,238,.9);font-weight:600}
+
+/* ===================== perangkat ===================== */
+.phone{
+  position:relative;width:390px;height:844px;border-radius:46px;overflow:hidden;
+  background:var(--paper);box-shadow:var(--sh-3),0 0 0 1px rgba(255,255,255,.09);
+  isolation:isolate;
+}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;color:var(--ink)}
+
+.statusbar{
+  flex:none;height:54px;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 26px 6px;font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--ink);
+}
+.statusbar.on-green{color:#fff}
+.statusbar .sig{display:flex;align-items:center;gap:6px}
+.statusbar .sig i{display:block;background:currentColor;border-radius:1px}
+.sig .bar1{width:3px;height:5px}.sig .bar2{width:3px;height:8px}.sig .bar3{width:3px;height:11px}
+.sig .bat{width:22px;height:11px;border:1.6px solid currentColor;border-radius:3px;position:relative}
+.sig .bat::after{content:"";position:absolute;right:-3.4px;top:3px;width:2px;height:5px;background:currentColor;border-radius:0 1px 1px 0}
+.sig .bat i{position:absolute;inset:1.6px;width:72%;background:currentColor;border-radius:1px}
+.sig .wf{width:15px;height:11px;border:1.6px solid currentColor;border-radius:2px;background:none}
+
+.appbar{
+  flex:none;height:52px;display:flex;align-items:center;gap:4px;padding:0 8px 0 6px;
+}
+.appbar .title{font-size:17px;font-weight:700;letter-spacing:-.01em;padding-left:6px;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.iconbtn{
+  width:44px;height:44px;display:grid;place-items:center;border:0;background:none;color:var(--ink);
+  border-radius:var(--r-pill);cursor:pointer;position:relative;
+}
+.iconbtn:hover{background:rgba(16,32,26,.055)}
+.iconbtn:focus-visible{outline:2px solid var(--g-500);outline-offset:2px}
+.badge{
+  position:absolute;top:2px;right:2px;min-width:19px;height:19px;padding:0 5px;border-radius:var(--r-pill);
+  background:var(--g-500);color:#fff;font-size:11px;font-weight:700;line-height:19px;text-align:center;
+  box-shadow:0 0 0 2px var(--paper);font-variant-numeric:tabular-nums;
+}
+.badge.on-green{box-shadow:0 0 0 2px var(--g-500);background:#fff;color:var(--g-500)}
+
+.page{flex:1;min-height:0;overflow:hidden;padding:0 16px;display:flex;flex-direction:column;gap:14px}
+
+.bottomfade{position:absolute;left:0;right:0;bottom:0;height:140px;pointer-events:none;
+  background:linear-gradient(to top,var(--paper) 52%,rgba(242,244,238,.92) 68%,rgba(242,244,238,0))}
+.homebar{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);width:128px;height:4.5px;
+  border-radius:var(--r-pill);background:rgba(16,32,26,.3);pointer-events:none}
+.homebar.on-dark{background:rgba(16,32,26,.34)}
+
+/* ===================== teks ===================== */
+.mono{font-family:"Courier Prime",monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);line-height:1.5;font-variant-numeric:tabular-nums}
+.mono.on-green{color:#fff}
+.mono b{font-weight:700}
+
+.h-sec{font-size:19px;font-weight:800;letter-spacing:-.022em;margin:0;color:var(--ink)}
+.price{font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.price .cur{font-size:.56em;font-weight:700;letter-spacing:.01em;margin-right:.32em;vertical-align:.06em}
+.unit{font-family:"Courier Prime",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin-left:3px}
+
+/* ===================== kepala hijau (beranda) ===================== */
+.topzone{
+  flex:none;background:var(--g-500);color:#fff;padding:0 16px 18px;
+  border-radius:0 0 var(--r-2xl) var(--r-2xl);box-shadow:0 12px 26px -20px rgba(0,48,26,.9);
+}
+.brandrow{display:flex;align-items:center;gap:10px;padding:2px 0 14px}
+.mark{
+  width:36px;height:36px;border-radius:11px;background:#fff;color:var(--g-500);
+  display:grid;place-items:center;font-size:15px;font-weight:800;letter-spacing:-.04em;flex:none;
+}
+.brandrow .name{font-size:21px;font-weight:800;letter-spacing:-.028em;flex:1;min-width:0}
+.brandrow .iconbtn{color:#fff;width:40px;height:40px}
+.brandrow .iconbtn:hover{background:rgba(255,255,255,.16)}
+
+.dayline{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.dayline .dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.6)}
+
+.ticket{
+  position:relative;background:#fff;border-radius:var(--r-md);padding:11px 14px 11px 12px;
+  display:grid;grid-template-columns:auto 1fr;align-items:center;gap:11px;color:var(--ink);
+  box-shadow:0 8px 18px -14px rgba(0,48,26,.9);
+}
+.ticket::before,.ticket::after{
+  content:"";position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--g-500);
+  transform:translateY(-50%);
+}
+.ticket::before{left:-8px}
+.ticket::after{right:-8px}
+.ticket .ic{width:34px;height:34px;border-radius:10px;background:var(--g-050);color:var(--g-600);
+  display:grid;place-items:center}
+.ticket .t1{font-size:14px;font-weight:700;letter-spacing:-.012em;margin:0}
+.ticket .t2{font-family:"Courier Prime",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);margin:2px 0 0}
+
+/* ===================== kategori ===================== */
+.secrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.secrow .link{display:inline-flex;align-items:center;gap:2px;border:0;background:none;cursor:pointer;
+  font-family:Archivo;font-size:12.5px;font-weight:600;color:var(--g-600);padding:2px 0}
+.secrow .link:hover{color:var(--g-800)}
+
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cat{
+  position:relative;height:96px;border:0;padding:0;border-radius:var(--r-lg);overflow:hidden;
+  cursor:pointer;box-shadow:var(--sh-1);background:var(--line);
+}
+.cat img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cat::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,48,26,0) 38%,rgba(0,37,20,.82) 100%)}
+.cat span{position:absolute;left:12px;bottom:10px;z-index:1;color:#fff;font-size:14px;font-weight:700;letter-spacing:-.012em}
+.cat:hover img{transform:scale(1.03)}
+.cat img{transition:transform .5s cubic-bezier(.16,1,.3,1)}
+
+/* ===================== kartu produk ===================== */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pcard{
+  position:relative;padding:7px 7px 9px;background:var(--card);border-radius:var(--r-lg);
+  box-shadow:var(--sh-1);display:flex;flex-direction:column;gap:0;
+  transition:transform .18s cubic-bezier(.16,1,.3,1),box-shadow .18s ease;
+}
+.pcard .hit{position:absolute;inset:0;border-radius:inherit;z-index:1}
+.pcard .hit:focus-visible{outline:2px solid var(--g-500);outline-offset:3px}
+.pcard .add{position:relative;z-index:2}
+.pcard:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(9,38,25,.06),0 18px 30px -18px rgba(9,38,25,.45)}
+.pcard .shot{position:relative;border-radius:var(--r-md);overflow:hidden;height:116px;background:var(--g-100)}
+.pcard .shot img{width:100%;height:100%;object-fit:cover;display:block}
+.pcard .shot .state{
+  position:absolute;left:8px;top:8px;background:rgba(255,255,255,.96);color:var(--stamp);
+  font-family:"Courier Prime",monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 7px;border-radius:var(--r-xs)
+}
+.pcard.out .shot img{filter:grayscale(.72) contrast(.92) brightness(.98)}
+.pcard .nm{font-size:13.5px;font-weight:600;letter-spacing:-.01em;margin:9px 2px 0;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard.out .nm{color:var(--ink-3)}
+.pcard .prow{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:5px 2px 0}
+.pcard .price{font-size:15px}
+.pcard.out .price{color:var(--ink-out)}
+.add{
+  flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--g-500);color:#fff;
+  display:grid;place-items:center;cursor:pointer;transition:background .18s,transform .18s;
+}
+.add:hover{background:var(--g-700);transform:scale(1.06)}
+.add:disabled{background:#EFF2EC;color:var(--ink-out);cursor:not-allowed;transform:none}
+.add .ico{width:16px;height:16px;stroke-width:2.4}
+
+/* ===================== pencarian + chip ===================== */
+.search{
+  display:flex;align-items:center;gap:9px;height:46px;padding:0 14px;background:var(--card);
+  border-radius:var(--r-pill);box-shadow:var(--sh-1);color:var(--ink-3);
+}
+.search input{
+  flex:1;min-width:0;border:0;background:none;outline:none;font-family:Archivo;font-size:14px;color:var(--ink);
+}
+.search input::placeholder{color:var(--ink-3)}
+.chips{display:flex;gap:8px;overflow:hidden}
+.chip{
+  flex:none;border:0;cursor:pointer;padding:0 14px;height:34px;border-radius:var(--r-pill);
+  background:var(--card);color:var(--ink-2);font-family:Archivo;font-size:13px;font-weight:600;
+  box-shadow:var(--sh-1);display:inline-flex;align-items:center;gap:6px;transition:background .18s,color .18s;
+}
+.chip:hover{color:var(--g-700)}
+.chip[aria-pressed="true"]{background:var(--g-500);color:#fff;box-shadow:0 6px 16px -10px rgba(0,94,50,.9)}
+.chip .n{font-family:"Courier Prime",monospace;font-size:10px;letter-spacing:.06em;opacity:.75}
+
+/* ===================== detail ===================== */
+.hero{position:relative;border-radius:var(--r-xl);overflow:hidden;height:186px;background:var(--g-100);flex:none}
+.hero img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;display:block}
+.hero::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(16,32,26,.07)}
+.thumbs{display:flex;gap:8px;flex:none}
+.thumb{
+  width:52px;height:47px;border-radius:var(--r-sm);overflow:hidden;border:0;padding:0;cursor:pointer;
+  background:var(--g-100);position:relative;opacity:.68;
+}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb[aria-pressed="true"]{opacity:1;box-shadow:0 0 0 2px var(--g-500);}
+.dhead{margin:2px 0 0}
+.dhead h1{margin:0;font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.dhead .meta{margin:5px 0 0}
+.dprice{display:flex;align-items:baseline;gap:4px;margin:9px 0 0}
+.dprice .price{font-size:34px}
+.dstock{display:flex;align-items:center;gap:6px;margin:7px 0 0}
+.dstock .pip{width:6px;height:6px;border-radius:50%;background:var(--g-500)}
+
+.varlist{display:flex;flex-direction:column;gap:7px;margin:9px 0 0}
+.var{
+  display:grid;grid-template-columns:16px 1fr auto auto;align-items:center;gap:10px;
+  background:var(--card);border-radius:var(--r-md);padding:10px 13px;cursor:pointer;
+  box-shadow:inset 0 0 0 1.5px var(--line);transition:box-shadow .18s,background .18s;
+}
+.var:hover{box-shadow:inset 0 0 0 1.5px var(--line-2)}
+.var .radio{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line-2);position:relative}
+.var .lbl{font-size:13.5px;font-weight:600;color:var(--ink)}
+.var .stk{font-family:"Courier Prime",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.var .price{font-size:13.5px}
+.var[aria-checked="true"]{background:var(--g-050);box-shadow:inset 0 0 0 1.8px var(--g-500)}
+.var[aria-checked="true"] .radio{box-shadow:none;background:var(--g-500)}
+.var[aria-checked="true"] .radio::after{content:"";position:absolute;inset:4.4px;border-radius:50%;background:#fff}
+.var[aria-checked="true"] .price{color:var(--g-800)}
+.var[aria-disabled="true"]{cursor:not-allowed;background:#F7F8F4}
+.var[aria-disabled="true"] .lbl{color:var(--ink-3)}
+.var[aria-disabled="true"] .price{color:var(--ink-out)}
+.var[aria-disabled="true"] .radio{box-shadow:inset 0 0 0 1.5px var(--line)}
+.var .stkout{font-family:"Courier Prime",monospace;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--stamp);background:var(--stamp-wash);padding:3px 6px;border-radius:var(--r-xs)}
+
+.qtyrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stepper{
+  display:inline-flex;align-items:center;gap:2px;background:var(--card);border-radius:var(--r-pill);
+  padding:3px;box-shadow:var(--sh-1);
+}
+.stepper button{
+  width:34px;height:34px;border-radius:50%;border:0;background:var(--g-050);color:var(--g-700);
+  display:grid;place-items:center;cursor:pointer;transition:background .16s,color .16s;
+}
+.stepper button:hover{background:var(--g-500);color:#fff}
+.stepper .n{min-width:30px;text-align:center;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+
+.desc{margin:0;font-size:13px;line-height:1.62;color:var(--ink-2)}
+
+/* ===================== bilah aksi ===================== */
+.actionbar{
+  position:absolute;left:0;right:0;bottom:0;padding:12px 16px 26px;background:var(--paper);
+  border-top:1px solid var(--line);
+}
+.btn-primary{
+  width:100%;height:56px;border:0;border-radius:var(--r-md);background:var(--g-500);color:#fff;
+  font-family:Archivo;font-size:15px;font-weight:700;letter-spacing:-.008em;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 20px;
+  box-shadow:0 10px 24px -14px rgba(0,94,50,.95);transition:background .18s,transform .18s;
+}
+.btn-primary:hover{background:var(--g-700)}
+.btn-primary:active{transform:translateY(1px)}
+.btn-primary:focus-visible{outline:2px solid var(--g-800);outline-offset:3px}
+.btn-primary .tot{
+  display:inline-flex;align-items:baseline;gap:3px;font-variant-numeric:tabular-nums;font-weight:800;
+  padding:0 14px;height:40px;border-radius:var(--r-sm);background:rgba(255,255,255,.16);
+  border-left:0;line-height:40px;
+}
+.btn-primary .tot .cur{font-size:.62em;font-weight:700;margin-right:.22em}
+.btn-primary.solo{justify-content:center;padding:0 20px}
+
+/* ===================== keranjang ===================== */
+.cartlist{display:flex;flex-direction:column;gap:10px}
+.citem{
+  position:relative;display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:start;
+  background:var(--card);border-radius:var(--r-lg);padding:10px;box-shadow:var(--sh-1);
+}
+.citem .shot{width:72px;height:72px;border-radius:var(--r-sm);overflow:hidden;background:var(--g-100)}
+.citem .shot img{width:100%;height:100%;object-fit:cover}
+.citem .nm{font-size:14px;font-weight:700;letter-spacing:-.012em;margin:2px 0 0;padding-right:26px}
+.citem .sub{margin:3px 0 0}
+.citem .right{text-align:right;padding-top:2px}
+.citem .right .price{font-size:15px}
+.citem .rm{
+  position:absolute;right:4px;top:4px;width:32px;height:32px;border:0;background:none;cursor:pointer;
+  color:var(--ink-3);border-radius:50%;display:grid;place-items:center;
+}
+.citem .rm:hover{background:rgba(16,32,26,.06);color:var(--ink)}
+.citem .stepper{margin-top:8px;padding:2px;box-shadow:inset 0 0 0 1.5px var(--line);background:none}
+.citem .stepper button{width:28px;height:28px}
+
+.ship{
+  display:grid;grid-template-columns:auto 1fr;gap:11px;align-items:center;
+  background:var(--g-050);border-radius:var(--r-md);padding:11px 13px;
+}
+.ship .ic{width:32px;height:32px;border-radius:10px;background:#fff;color:var(--g-600);display:grid;place-items:center}
+.ship .t1{font-size:13px;font-weight:700;margin:0;color:var(--g-900)}
+.ship .t2{margin:2px 0 0;font-family:"Courier Prime",monospace;font-size:11px;line-height:1.45;letter-spacing:.09em;text-transform:uppercase;color:var(--g-700)}
+
+.docket{position:relative;background:var(--card);border-radius:var(--r-lg);padding:30px 15px 15px;box-shadow:var(--sh-1)}
+.docket .perf{position:absolute;left:15px;right:15px;top:19px;height:1px;
+  background-image:repeating-linear-gradient(90deg,var(--line-2) 0 5px,transparent 5px 10px)}
+.docket .notch{position:absolute;top:19px;width:16px;height:16px;border-radius:50%;background:var(--paper);transform:translateY(-50%)}
+.docket .notch.l{left:-8px}
+.docket .notch.r{right:-8px}
+.docket h2{margin:0 0 10px;font-size:15px;font-weight:800;letter-spacing:-.015em}
+.srow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:5px 0}
+.srow .k{font-size:13px;color:var(--ink-2)}
+.srow .v{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.srow.total{border-top:1px solid var(--line);margin-top:6px;padding-top:9px}
+.srow.total .k{font-size:13.5px;font-weight:700;color:var(--ink)}
+.srow.total .v{font-size:18px;font-weight:800;letter-spacing:-.025em}
+.srow .v.muted{font-family:"Courier Prime",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:400}
+
+.note{display:flex;gap:7px;align-items:flex-start;color:var(--ink-3)}
+.note .ico{width:14px;height:14px;margin-top:1px}
+
+.repeat{background:var(--card);border-radius:var(--r-lg);padding:11px 12px 5px;box-shadow:var(--sh-1)}
+.repeat h2{font-size:13.5px;font-weight:800;letter-spacing:-.015em;margin:0 0 4px}
+.rep:first-of-type{border-top:0}
+.rep{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:6px 0;
+  border-top:1px solid var(--line)}
+.rep .shot{width:44px;height:44px;border-radius:var(--r-sm);overflow:hidden;background:var(--g-100)}
+.rep .shot img{width:100%;height:100%;object-fit:cover}
+.rep .nm{font-size:12.5px;font-weight:600;margin:0}
+.rep .sub{margin:2px 0 0;font-family:"Courier Prime",monospace;font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3)}
+.rep button{height:30px;padding:0 12px;border:0;border-radius:var(--r-pill);background:var(--g-050);
+  color:var(--g-700);font-family:Archivo;font-size:12px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;transition:background .16s,color .16s}
+.rep button:hover{background:var(--g-500);color:#fff}
+.rep button .ico{width:13px;height:13px;stroke-width:2.6}
+
+/* ===================== bilah tab ===================== */
+.tabbar{
+  position:absolute;left:12px;right:12px;bottom:24px;height:64px;background:var(--card);
+  border-radius:var(--r-pill);box-shadow:var(--sh-2);display:grid;grid-template-columns:repeat(4,1fr);
+  padding:5px;z-index:3;
+}
+.tab{
+  border:0;background:none;cursor:pointer;border-radius:var(--r-pill);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;color:var(--ink-3);position:relative;padding:0;
+}
+.tab .lbl{font-family:"Courier Prime",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.tab .ico{width:21px;height:21px}
+.tab[aria-current="page"]{background:var(--g-050);color:var(--g-600)}
+.tab[aria-current="page"] .ico{stroke-width:2.1}
+.tab .badge{top:4px;right:14px}
+
+/* ===================== sistem ===================== */
+.sys{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:34px 0 0}
+.panel{background:var(--board-panel);border:1px solid var(--board-line);border-radius:var(--r-lg);padding:20px}
+.panel h3{margin:0 0 14px;font-size:12px;font-family:"Courier Prime",monospace;letter-spacing:.16em;
+  text-transform:uppercase;color:rgba(242,244,238,.72);font-weight:400}
+.sw{display:flex;align-items:center;gap:11px;padding:6px 0}
+.sw .chp{width:34px;height:34px;border-radius:11px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.sw .nm{font-size:13px;font-weight:600;color:var(--board-ink)}
+.sw .hx{font-family:"Courier Prime",monospace;font-size:10px;letter-spacing:.09em;color:var(--board-ink-2);margin-top:2px;text-transform:uppercase}
+.rules{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+.rules li{font-size:13px;line-height:1.55;color:var(--board-ink-2);padding-left:16px;position:relative}
+.rules li::before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--g-400)}
+.rules b{color:var(--board-ink);font-weight:600}
+.spec{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.spec .box{background:var(--g-500);color:#fff;font-family:"Courier Prime",monospace;font-size:9px;
+  letter-spacing:.08em;display:grid;place-items:center;min-width:44px;height:38px;padding:0 8px}
+.type-demo{display:flex;flex-direction:column;gap:12px}
+.type-demo .t{color:var(--board-ink)}
+.type-demo .t .cap{display:block;font-family:"Courier Prime",monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:rgba(242,244,238,.5);margin-top:5px}
+.foot{margin:64px 0 0;padding-top:22px;border-top:1px solid var(--board-line);
+  font-size:12px;line-height:1.7;color:rgba(242,244,238,.5);max-width:70ch}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+</svg>
+
+<main class="board">
+
+  <header class="doc-head">
+    <h1>Katalog &amp; belanja</h1>
+    <p class="sub">Empat layar wireframe yang sama — Beranda, Daftar produk, Detail produk, Keranjang — kini digambar penuh: hijau brand <b>#008043</b> memegang wilayah, sudut membulat 12–32 px, foto barang menjadi bahan utama, dan setiap angka duduk di kolom tabular seperti papan harga.</p>
+    <div class="doc-meta">
+      <span class="hi">Hijau #008043</span>
+      <span>390 × 844</span>
+      <span>Radius 12–32</span>
+      <span>Archivo + Courier Prime</span>
+      <span>Data contoh</span>
+    </div>
+  </header>
+
+  <section class="sect">
+    <h2>Empat layar</h2>
+    <p class="lede">Struktur mengikuti wireframe; yang ditambahkan hanya yang dibutuhkan transaksi: tombol tambah langsung di kartu, kolom stok pada tiap varian, dan jadwal kirim di keranjang. Yang tidak diambil: lencana diskon, hitung mundur, dan kartu bertumpuk.</p>
+
+    <div class="frames">
+
+      <!-- ══════════ BERANDA ══════════ -->
+      <figure class="frame">
+        <div class="plate"><b>01</b> Beranda <em>pengunjung</em></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="topzone">
+              <div class="statusbar on-green" style="margin:0 -16px;padding-left:26px;padding-right:26px">
+                <span>20.14</span>
+                <span class="sig"><span class="wf"></span><i class="bar1"></i><i class="bar2"></i><i class="bar3"></i><span class="bat"><i></i></span></span>
+              </div>
+              <div class="brandrow">
+                <span class="mark">SA</span>
+                <span class="name">Segar Anugerah</span>
+                <button class="iconbtn" aria-label="Cari produk"><svg class="ico"><use href="#i-search"/></svg></button>
+                <button class="iconbtn" aria-label="Keranjang, 2 barang"><svg class="ico"><use href="#i-bag"/></svg><span class="badge on-green">2</span></button>
+              </div>
+              <div class="dayline">
+                <span class="mono on-green">Kamis · 19 Nov 2026</span>
+                <span class="dot"></span>
+                <span class="mono on-green">Pesan sebelum 16.00</span>
+              </div>
+              <div class="ticket">
+                <span class="ic"><svg class="ico ico-sm"><use href="#i-truck"/></svg></span>
+                <div>
+                  <p class="t1">Gratis ongkir</p>
+                  <p class="t2">Semua kecamatan · sampai 31 Des 2026</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="page" style="padding-top:16px">
+              <div>
+                <div class="secrow" style="margin-bottom:10px">
+                  <h2 class="h-sec">Kategori</h2>
+                </div>
+                <div class="cats">
+                  <button class="cat"><img src="figcraft/assets/photos/nila.jpg" alt="Ikan"><span>Ikan</span></button>
+                  <button class="cat"><img src="figcraft/assets/photos/kangkung.jpg" alt="Sayur"><span>Sayur</span></button>
+                  <button class="cat"><img src="figcraft/assets/photos/dapur.jpg" alt="Bumbu dapur"><span>Bumbu dapur</span></button>
+                  <button class="cat"><img src="figcraft/assets/photos/telur.jpg" alt="Telur"><span>Telur</span></button>
+                </div>
+              </div>
+
+              <div>
+                <div class="secrow" style="margin-bottom:10px">
+                  <h2 class="h-sec">Produk unggulan</h2>
+                  <button class="link">Lihat semua <svg class="ico ico-xs"><use href="#i-chev-right"/></svg></button>
+                </div>
+                <div class="grid2">
+                  <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                    <span class="shot"><img src="figcraft/assets/photos/nila.jpg" alt=""></span>
+                    <span class="nm">Ikan Nila</span>
+                    <span class="prow"><span class="price"><span class="cur">Rp</span>45.000<span class="unit">/kg</span></span><button class="add" aria-label="Tambah Ikan Nila"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                  </div>
+                  <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                    <span class="shot"><img src="figcraft/assets/photos/udang.jpg" alt=""></span>
+                    <span class="nm">Udang Segar</span>
+                    <span class="prow"><span class="price"><span class="cur">Rp</span>95.000<span class="unit">/kg</span></span><button class="add" aria-label="Tambah Udang Segar"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                  </div>
+                  <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                    <span class="shot"><img src="figcraft/assets/photos/kangkung.jpg" alt=""></span>
+                    <span class="nm">Kangkung</span>
+                    <span class="prow"><span class="price"><span class="cur">Rp</span>8.000<span class="unit">/ikat</span></span><button class="add" aria-label="Tambah Kangkung"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                  </div>
+                  <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                    <span class="shot"><img src="figcraft/assets/photos/telur.jpg" alt=""></span>
+                    <span class="nm">Telur Ayam</span>
+                    <span class="prow"><span class="price"><span class="cur">Rp</span>28.000<span class="unit">/kg</span></span><button class="add" aria-label="Tambah Telur Ayam"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bottomfade"></div>
+            <nav class="tabbar" aria-label="Navigasi utama">
+              <button class="tab" aria-current="page"><svg class="ico"><use href="#i-home"/></svg><span class="lbl">Beranda</span></button>
+              <button class="tab"><svg class="ico"><use href="#i-package"/></svg><span class="lbl">Produk</span></button>
+              <button class="tab"><svg class="ico"><use href="#i-bag"/></svg><span class="lbl">Keranjang</span><span class="badge">2</span></button>
+              <button class="tab"><svg class="ico"><use href="#i-user"/></svg><span class="lbl">Akun</span></button>
+            </nav>
+            <span class="homebar"></span>
+          </div>
+        </div>
+        <figcaption><b>Gulir:</b> dua produk unggulan lagi, lalu kaki toko (WhatsApp, alamat, cut-off). Pita hijau memuat nama, hari, cut-off, dan baris gratis ongkir sekaligus — pembeli tahu syaratnya sebelum menyentuh barang.</figcaption>
+      </figure>
+
+      <!-- ══════════ DAFTAR PRODUK ══════════ -->
+      <figure class="frame">
+        <div class="plate"><b>02</b> Daftar produk <em>penjelajahan</em></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>20.14</span>
+              <span class="sig"><span class="wf"></span><i class="bar1"></i><i class="bar2"></i><i class="bar3"></i><span class="bat"><i></i></span></span>
+            </div>
+            <header class="appbar">
+              <button class="iconbtn" aria-label="Kembali"><svg class="ico"><use href="#i-arrow-left"/></svg></button>
+              <span class="title">Produk</span>
+              <button class="iconbtn" aria-label="Keranjang, 2 barang"><svg class="ico"><use href="#i-bag"/></svg><span class="badge">2</span></button>
+            </header>
+
+            <div class="page" style="gap:12px">
+              <div class="search">
+                <svg class="ico ico-sm"><use href="#i-search"/></svg>
+                <input type="search" placeholder="Cari ikan atau sayur" aria-label="Cari produk">
+              </div>
+
+              <div class="chips">
+                <button class="chip" aria-pressed="true">Semua</button>
+                <button class="chip">Ikan <span class="n">4</span></button>
+                <button class="chip">Sayur <span class="n">3</span></button>
+                <button class="chip">Bumbu</button>
+              </div>
+
+              <div class="mono">6 produk · diurutkan dari yang terbaru</div>
+
+              <div class="grid2">
+                <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                  <span class="shot"><img src="figcraft/assets/photos/nila.jpg" alt=""></span>
+                  <span class="nm">Ikan Nila</span>
+                  <span class="prow"><span class="price"><span class="cur">Rp</span>45.000<span class="unit">/kg</span></span><button class="add" aria-label="Tambah Ikan Nila"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                </div>
+                <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                  <span class="shot"><img src="figcraft/assets/photos/gurame.jpg" alt=""></span>
+                  <span class="nm">Ikan Gurame</span>
+                  <span class="prow"><span class="price"><span class="cur">Rp</span>62.000<span class="unit">/kg</span></span><button class="add" aria-label="Tambah Ikan Gurame"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                </div>
+                <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                  <span class="shot"><img src="figcraft/assets/photos/udang.jpg" alt=""></span>
+                  <span class="nm">Udang Segar</span>
+                  <span class="prow"><span class="price"><span class="cur">Rp</span>95.000<span class="unit">/kg</span></span><button class="add" aria-label="Tambah Udang Segar"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                </div>
+                <div class="pcard out"><a class="hit" href="#" aria-label="Buka detail"></a>
+                  <span class="shot"><img src="figcraft/assets/photos/bayam.jpg" alt=""><span class="state">Habis</span></span>
+                  <span class="nm">Bayam</span>
+                  <span class="prow"><span class="price"><span class="cur">Rp</span>7.500<span class="unit">/ikat</span></span><button class="add" aria-label="Bayam habis" disabled><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                </div>
+                <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                  <span class="shot"><img src="figcraft/assets/photos/kangkung.jpg" alt=""></span>
+                  <span class="nm">Kangkung</span>
+                  <span class="prow"><span class="price"><span class="cur">Rp</span>8.000<span class="unit">/ikat</span></span><button class="add" aria-label="Tambah Kangkung"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                </div>
+                <div class="pcard"><a class="hit" href="#" aria-label="Buka detail"></a>
+                  <span class="shot"><img src="figcraft/assets/photos/telur.jpg" alt=""></span>
+                  <span class="nm">Telur Ayam</span>
+                  <span class="prow"><span class="price"><span class="cur">Rp</span>28.000<span class="unit">/kg</span></span><button class="add" aria-label="Tambah Telur Ayam"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bottomfade"></div>
+            <nav class="tabbar" aria-label="Navigasi utama">
+              <button class="tab"><svg class="ico"><use href="#i-home"/></svg><span class="lbl">Beranda</span></button>
+              <button class="tab" aria-current="page"><svg class="ico"><use href="#i-package"/></svg><span class="lbl">Produk</span></button>
+              <button class="tab"><svg class="ico"><use href="#i-bag"/></svg><span class="lbl">Keranjang</span><span class="badge">2</span></button>
+              <button class="tab"><svg class="ico"><use href="#i-user"/></svg><span class="lbl">Akun</span></button>
+            </nav>
+            <span class="homebar"></span>
+          </div>
+        </div>
+        <figcaption><b>Harga terendah per varian</b> ditulis dengan awalan "dari" hanya bila variannya lebih dari satu. Baris <b>Habis</b> tetap tampil, fotonya diredupkan, dan tombol tambahnya mati — tidak disembunyikan.</figcaption>
+      </figure>
+
+      <!-- ══════════ DETAIL PRODUK ══════════ -->
+      <figure class="frame">
+        <div class="plate"><b>03</b> Detail produk <em>keputusan</em></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>20.14</span>
+              <span class="sig"><span class="wf"></span><i class="bar1"></i><i class="bar2"></i><i class="bar3"></i><span class="bat"><i></i></span></span>
+            </div>
+            <header class="appbar">
+              <button class="iconbtn" aria-label="Kembali"><svg class="ico"><use href="#i-arrow-left"/></svg></button>
+              <span class="title">Ikan Nila</span>
+              <button class="iconbtn" aria-label="Keranjang, 2 barang"><svg class="ico"><use href="#i-bag"/></svg><span class="badge">2</span></button>
+            </header>
+
+            <div class="page" style="gap:12px;padding-top:2px">
+              <div class="hero"><img src="figcraft/assets/photos/nila.jpg" alt="Ikan nila segar"></div>
+
+              <div class="thumbs">
+                <button class="thumb" aria-pressed="true"><img src="figcraft/assets/photos/nila.jpg" alt=""></button>
+                <button class="thumb" aria-pressed="false"><img src="figcraft/assets/photos/nila.jpg" alt="" style="object-position:20% 30%;transform:scale(1.5)"></button>
+                <button class="thumb" aria-pressed="false"><img src="figcraft/assets/photos/nila.jpg" alt="" style="object-position:75% 65%;transform:scale(1.6)"></button>
+                <button class="thumb" aria-pressed="false"><img src="figcraft/assets/photos/nila.jpg" alt="" style="object-position:55% 15%;transform:scale(1.4)"></button>
+              </div>
+
+              <div class="dhead">
+                <h1>Ikan Nila</h1>
+                <p class="meta mono" style="margin:5px 0 0">Ikan · per kg</p>
+                <div class="dprice"><span class="price"><span class="cur">Rp</span>45.000</span><span class="unit">/kg</span></div>
+                <p class="dstock mono"><span class="pip"></span>Stok tersisa 12</p>
+              </div>
+
+              <div>
+                <h2 class="h-sec" style="font-size:14px;margin-bottom:2px">Pilih ukuran</h2>
+                <div class="varlist" role="radiogroup" aria-label="Pilih ukuran">
+                  <div class="var" role="radio" aria-checked="true" tabindex="0">
+                    <span class="radio"></span>
+                    <span class="lbl">1 kg</span>
+                    <span class="stk">Stok 12</span>
+                    <span class="price"><span class="cur">Rp</span>45.000</span>
+                  </div>
+                  <div class="var" role="radio" aria-checked="false" tabindex="0">
+                    <span class="radio"></span>
+                    <span class="lbl">2 kg</span>
+                    <span class="stk">Stok 5</span>
+                    <span class="price"><span class="cur">Rp</span>88.000</span>
+                  </div>
+                  <div class="var" role="radio" aria-checked="false" aria-disabled="true" tabindex="-1">
+                    <span class="radio"></span>
+                    <span class="lbl">3 kg</span>
+                    <span class="stkout">Habis</span>
+                    <span class="price"><span class="cur">Rp</span>130.000</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="qtyrow">
+                <span style="font-size:13.5px;font-weight:600">Jumlah</span>
+                <div class="stepper">
+                  <button aria-label="Kurangi jumlah"><svg class="ico ico-sm"><use href="#i-minus"/></svg></button>
+                  <span class="n">1</span>
+                  <button aria-label="Tambah jumlah"><svg class="ico ico-sm"><use href="#i-plus"/></svg></button>
+                </div>
+              </div>
+
+              <section>
+                <h2 class="h-sec" style="font-size:14px;margin-bottom:5px">Deskripsi</h2>
+                <p class="desc">Ikan nila segar dari kolam sendiri, dibersihkan dan disiangi sesuai permintaan. Dikirim pagi hari dengan es.</p>
+              </section>
+            </div>
+
+            <div class="actionbar">
+              <button class="btn-primary"><span>Tambah ke keranjang</span><span class="tot"><span class="cur">Rp</span>45.000</span></button>
+            </div>
+            <span class="homebar"></span>
+          </div>
+        </div>
+        <figcaption><b>Tiga varian terbaca sekaligus:</b> ukuran, stok, dan harga duduk di kolom sendiri, jadi membandingkan berat terhadap harga selesai tanpa satu pun ketukan. Varian habis tetap ada, tidak bisa dipilih.</figcaption>
+      </figure>
+
+      <!-- ══════════ KERANJANG ══════════ -->
+      <figure class="frame">
+        <div class="plate"><b>04</b> Keranjang <em>sebelum bayar</em></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>20.14</span>
+              <span class="sig"><span class="wf"></span><i class="bar1"></i><i class="bar2"></i><i class="bar3"></i><span class="bat"><i></i></span></span>
+            </div>
+            <header class="appbar">
+              <button class="iconbtn" aria-label="Kembali"><svg class="ico"><use href="#i-arrow-left"/></svg></button>
+              <span class="title">Keranjang</span>
+              <span class="mono" style="padding-right:12px">2 baris</span>
+            </header>
+
+            <div class="page" style="gap:12px">
+              <div class="cartlist">
+                <div class="citem">
+                  <span class="shot"><img src="figcraft/assets/photos/nila.jpg" alt=""></span>
+                  <div>
+                    <p class="nm">Ikan Nila</p>
+                    <p class="sub mono">1 kg · Rp 45.000</p>
+                    <div class="stepper">
+                      <button aria-label="Kurangi Ikan Nila"><svg class="ico ico-sm"><use href="#i-minus"/></svg></button>
+                      <span class="n">2</span>
+                      <button aria-label="Tambah Ikan Nila"><svg class="ico ico-sm"><use href="#i-plus"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="right"><span class="price"><span class="cur">Rp</span>90.000</span></div>
+                  <button class="rm" aria-label="Hapus Ikan Nila"><svg class="ico ico-sm"><use href="#i-x"/></svg></button>
+                </div>
+
+                <div class="citem">
+                  <span class="shot"><img src="figcraft/assets/photos/kangkung.jpg" alt=""></span>
+                  <div>
+                    <p class="nm">Kangkung</p>
+                    <p class="sub mono">1 ikat · Rp 8.000</p>
+                    <div class="stepper">
+                      <button aria-label="Kurangi Kangkung"><svg class="ico ico-sm"><use href="#i-minus"/></svg></button>
+                      <span class="n">2</span>
+                      <button aria-label="Tambah Kangkung"><svg class="ico ico-sm"><use href="#i-plus"/></svg></button>
+                    </div>
+                  </div>
+                  <div class="right"><span class="price"><span class="cur">Rp</span>16.000</span></div>
+                  <button class="rm" aria-label="Hapus Kangkung"><svg class="ico ico-sm"><use href="#i-x"/></svg></button>
+                </div>
+              </div>
+
+              <div class="ship">
+                <span class="ic"><svg class="ico ico-sm"><use href="#i-clock"/></svg></span>
+                <div>
+                  <p class="t1">Dikirim hari ini</p>
+                  <p class="t2">Bila dipesan sebelum 16.00 · gratis ongkir</p>
+                </div>
+              </div>
+
+              <div class="docket">
+                <span class="perf"></span><span class="notch l"></span><span class="notch r"></span>
+                <h2>Ringkasan</h2>
+                <div class="srow"><span class="k">Subtotal · 2 baris</span><span class="v">Rp 106.000</span></div>
+                <div class="srow"><span class="k">Ongkir</span><span class="v muted">Dihitung di checkout</span></div>
+                <div class="srow total"><span class="k">Total sementara</span><span class="v">Rp 106.000</span></div>
+              </div>
+
+              <div class="note">
+                <svg class="ico"><use href="#i-info"/></svg>
+                <span class="mono" style="letter-spacing:.06em">Harga diperiksa ulang saat checkout.</span>
+              </div>
+
+              <div class="repeat">
+                <h2>Terakhir kamu pesan</h2>
+                <div class="rep">
+                  <span class="shot"><img src="figcraft/assets/photos/udang.jpg" alt=""></span>
+                  <div><p class="nm">Udang Segar</p><p class="sub">1 kg · Rp 95.000</p></div>
+                  <button><svg class="ico"><use href="#i-plus"/></svg>Tambah</button>
+                </div>
+                <div class="rep">
+                  <span class="shot"><img src="figcraft/assets/photos/telur.jpg" alt=""></span>
+                  <div><p class="nm">Telur Ayam</p><p class="sub">2 kg · Rp 56.000</p></div>
+                  <button><svg class="ico"><use href="#i-plus"/></svg>Tambah</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="actionbar">
+              <button class="btn-primary solo"><span>Lanjut ke checkout</span></button>
+            </div>
+            <span class="homebar"></span>
+          </div>
+        </div>
+        <figcaption><b>Nota bertakik</b> memisahkan barang dari uang: ringkasan dibaca seperti struk, subtotal besar dan tabular, ongkir menyatakan dengan jujur bahwa ia baru muncul di checkout.</figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <section class="sect">
+    <h2>Sistem</h2>
+    <p class="lede">Yang membuat keempat layar satu toko: satu hijau yang memegang wilayah, satu keluarga sudut, dua suara huruf, dan satu tanda untuk yang habis.</p>
+
+    <div class="sys">
+      <div class="panel">
+        <h3>Warna</h3>
+        <div class="sw"><span class="chp" style="background:#008043"></span><div><div class="nm">Hijau toko</div><div class="hx">#008043 · pita, aksi, tab aktif</div></div></div>
+        <div class="sw"><span class="chp" style="background:#005E32"></span><div><div class="nm">Hijau tekan</div><div class="hx">#005E32 · hover aksi utama</div></div></div>
+        <div class="sw"><span class="chp" style="background:#EAF2EC"></span><div><div class="nm">Hijau kertas</div><div class="hx">#EAF2EC · varian terpilih, tab aktif</div></div></div>
+        <div class="sw"><span class="chp" style="background:#F2F4EE"></span><div><div class="nm">Kertas</div><div class="hx">#F2F4EE · latar layar</div></div></div>
+        <div class="sw"><span class="chp" style="background:#FFFFFF"></span><div><div class="nm">Kartu</div><div class="hx">#FFFFFF · kartu, bilah, nota</div></div></div>
+        <div class="sw"><span class="chp" style="background:#10201A"></span><div><div class="nm">Tinta</div><div class="hx">#10201A · nama, harga, judul</div></div></div>
+        <div class="sw"><span class="chp" style="background:#5B6D65"></span><div><div class="nm">Tinta catatan</div><div class="hx">#5B6D65 · satuan, stok, 5,5:1</div></div></div>
+        <div class="sw"><span class="chp" style="background:#B3261E"></span><div><div class="nm">Cap merah</div><div class="hx">#B3261E · hanya "Habis"</div></div></div>
+      </div>
+
+      <div class="panel">
+        <h3>Bentuk</h3>
+        <div class="spec">
+          <span class="box" style="border-radius:8px">8</span>
+          <span class="box" style="border-radius:12px">12</span>
+          <span class="box" style="border-radius:16px">16</span>
+          <span class="box" style="border-radius:20px">20</span>
+          <span class="box" style="border-radius:26px">26</span>
+          <span class="box" style="border-radius:999px">pil</span>
+        </div>
+        <ul class="rules" style="margin-top:18px">
+          <li><b>12–16 px</b> untuk benda kecil: nota, potongan foto, tombol tambah.</li>
+          <li><b>20–26 px</b> untuk kartu, pita kepala, dan bilah aksi.</li>
+          <li><b>Pil</b> untuk yang ditekan berulang: chip, tab, stepper, tombol utama.</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Huruf</h3>
+        <div class="type-demo">
+          <div class="t" style="font-size:30px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums">Rp 45.000<span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.1em;color:rgba(242,244,238,.55);margin-left:6px">/KG</span>
+            <span class="cap">Archivo 800 · 34 px · tabular</span></div>
+          <div class="t" style="font-size:15px;font-weight:600"><span class="cap" style="margin:0 0 4px">Archivo 600 · 14 px · nama barang</span>Ikan Nila · Udang Segar</div>
+          <div class="t" style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:rgba(242,244,238,.78)">Stok 12 · per kg · sebelum 16.00
+            <span class="cap">Courier Prime · 10 px · catatan</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Aturan</h3>
+        <ul class="rules">
+          <li><b>Hijau memegang wilayah</b> — pita kepala, aksi utama, tab aktif, penanda pilihan. Bukan bintik di pojok kartu putih.</li>
+          <li><b>Angka selalu tabular</b> dan rata kanan; satuan ditulis mono, harga tidak.</li>
+          <li><b>Yang habis tetap tampil.</b> Foto diredupkan, label "Habis", tombol mati. Satu-satunya tempat merah.</li>
+          <li><b>Tidak ada lencana diskon, hitung mundur, atau "terjual 1.234"</b> — toko ini menjual kesegaran, bukan kelangkaan.</li>
+          <li><b>Foto adalah bahan utama</b>, bukan hiasan: satu foto per barang, dipotong rapat, sudut membulat.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">
+    Foto: contoh dari <b style="color:rgba(242,244,238,.8)">Openverse</b> (domain publik / CC), disimpan di <span style="font-family:'Courier Prime',monospace">design/figcraft/assets/photos</span>. Data harga, stok, dan tanggal adalah contoh; tarif ongkir belum ditetapkan (Fase 2). Dibangun mengikuti <span style="font-family:'Courier Prime',monospace">design/wireframes-store.html</span> · 19 Nov 2026.
+  </p>
+
+</main>
+</body>
+</html>
