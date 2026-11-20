@@ -9,7 +9,7 @@ dunia visual. Sumber visual toko: [`design/segar-anugerah-client.pen`](design/se
 
 | Fase | Isi | Status |
 |---|---|---|
-| 1 | Fondasi: repo, skema, auth, seed, deploy | 🟡 berjalan — skema + auth admin selesai, deploy belum |
+| 1 | Fondasi: repo, skema, auth, seed, deploy | 🟡 staging live di Vercel + Neon; domain dan R2 belum |
 | — | Permukaan toko (desain `.pen`): 13 layar + keadaan kosong/memuat | 🟡 katalog, akun, dan alamat dari database; pesanan masih contoh |
 | 2 | Katalog & admin katalog | ✅ admin katalog + toko membaca katalog database |
 | 3 | Akun pembeli & keranjang | 🟡 daftar, masuk, profil, alamat, checkout zona DB selesai; keranjang masih di perangkat |
@@ -29,6 +29,24 @@ pnpm dev                        # http://localhost:3000
 ```
 
 Masuk admin di `/admin/login` dengan nomor dan sandi dari `SEED_ADMIN_*` di `.env.local`.
+
+## Staging
+
+- Vercel: https://segar-anugerah-v2.vercel.app (region fungsi `sin1`)
+- Database: Neon project `segar-anugerah`, branch `staging`, koneksi pooled
+- Deployment Protection aktif. Uji lewat curl pakai `vercel curl`; pembeli luar belum bisa
+  membuka situs sampai proteksi dimatikan atau domain produksi dipakai.
+
+Migrasi dan seed ke staging memakai env dari shell, bukan `.env.local`:
+
+```bash
+set -a; source .env.staging; set +a
+npm run db:migrate
+npm run db:seed
+```
+
+`.env.staging` tidak masuk git. Isinya `DATABASE_URL` Neon pooled, `SEED_ADMIN_*` staging, dan
+kunci Midtrans sandbox.
 
 ## Rute toko
 
