@@ -1,4 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["sin1"]
+  "regions": ["sin1"],
+  "schedules": {
+    "expire-orders": {
+      "schedule": "*/15 * * * *",
+      "path": "/api/cron/expire-orders",
+      "requestMethod": "GET"
+    }
+  }
 }

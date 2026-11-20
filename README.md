@@ -13,7 +13,7 @@ dunia visual. Sumber visual toko: [`design/segar-anugerah-client.pen`](design/se
 | — | Permukaan toko (desain `.pen`): 13 layar + keadaan kosong/memuat | 🟡 katalog, akun, dan alamat dari database; pesanan masih contoh |
 | 2 | Katalog & admin katalog | ✅ admin katalog + toko membaca katalog database |
 | 3 | Akun pembeli & keranjang | ✅ akun, alamat, checkout zona DB; keranjang tetap di perangkat |
-| 4 | Midtrans & pesanan | 🟡 pesanan + kunci stok + halaman pesanan selesai; Snap, webhook, kedaluwarsa belum |
+| 4 | Midtrans & pesanan | 🟡 pesanan, Snap, webhook, jeda bayar selesai; admin pesanan di Fase 5 |
 | 5 | Dashboard pesanan & laporan | ⏸ belum |
 | 6 | Uji & peluncuran | ⏸ belum |
 
@@ -141,5 +141,11 @@ design/                       # .pen, wireframe, dan artefak desain
 - Pembayaran masih alur tampilan; Midtrans Snap, webhook, dan kedaluwarsa otomatis menyusul di
   Fase 4. Tombol bayar belum membuat transaksi nyata.
 - `.env.local` tidak masuk git. Jangan pernah menaruh kunci Midtrans di repo.
-- Webhook Midtrans tidak bisa menjangkau `localhost`; saat Fase 4 pakai URL preview Vercel.
+- Webhook Midtrans tidak bisa menjangkau `localhost`. Uji di preview Vercel: daftarkan
+  `https://<preview>/api/webhooks/midtrans` di dashboard Midtrans, atau kirim notifikasi sendiri
+  dengan tanda tangan yang dihitung dari server key.
+- Jadwal kedaluwarsa di `vercel.json` jalan tiap 15 menit (batas Hobby). PRD meminta 5 menit; di
+  Pro cukup ganti menjadi `*/5 * * * *`.
+- `CRON_SECRET` wajib ada di environment Vercel. Rute cron menolak permintaan tanpa header
+  `Authorization: Bearer <CRON_SECRET>`.
 - Nomor HP dinormalkan ke format `08…` dan disimpan unik.
