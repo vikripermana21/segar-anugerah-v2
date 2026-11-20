@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const finishUrl = new URL(
+  const resultUrl = new URL(
     `/checkout/result?order=${encodeURIComponent(row.orderNumber)}`,
     request.url,
   ).toString();
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       orderNumber: row.orderNumber,
       grossAmount: row.total,
       expiryMinutes: Math.min(ORDER_EXPIRY_MINUTES, remainingMinutes),
-      finishUrl,
+      resultUrl,
       customer: { name: session.name, phone: session.phone },
     });
 

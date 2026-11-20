@@ -9,7 +9,7 @@ export type SnapRequest = {
   orderNumber: string;
   grossAmount: number;
   expiryMinutes: number;
-  finishUrl: string;
+  resultUrl: string;
   customer: { name: string; phone: string };
 };
 
@@ -41,7 +41,11 @@ export async function createSnapTransaction(input: SnapRequest): Promise<SnapRes
       phone: input.customer.phone,
     },
     expiry: { unit: "minutes", duration: Math.max(1, input.expiryMinutes) },
-    callbacks: { finish: input.finishUrl },
+    callbacks: {
+      finish: input.resultUrl,
+      unfinish: input.resultUrl,
+      error: input.resultUrl,
+    },
     // Kartu kredit sengaja tidak diaktifkan (PRD 3.5).
     enabled_payments: [
       "other_qris",

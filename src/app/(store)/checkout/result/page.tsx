@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "Pembayaran",
 };
 
-type SearchParams = Promise<{ order?: string }>;
+type SearchParams = Promise<{ order?: string; order_id?: string }>;
 
 const successStatuses: OrderStatus[] = ["paid", "processing", "out_for_delivery", "completed"];
 
@@ -59,7 +59,9 @@ export default async function PaymentResultPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { order: orderNumber } = await searchParams;
+  const params = await searchParams;
+  // Snap menambahkan `order_id` sendiri saat mengalihkan ke URL dashboard.
+  const orderNumber = params.order ?? params.order_id;
   if (!orderNumber) redirect("/account/orders");
 
   const session = await requireCustomer(`/account/orders/${orderNumber}`);
