@@ -1,6 +1,7 @@
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -186,6 +187,10 @@ export const order = pgTable("orders", {
   midtransOrderId: text("midtrans_order_id").notNull().unique(),
   /** Kunci dari klien: permintaan ulang dengan kunci sama tidak membuat pesanan baru. */
   idempotencyKey: text("idempotency_key").unique(),
+  /** Token Snap disimpan supaya klik Bayar berulang tidak membuat transaksi baru. */
+  snapToken: text("snap_token"),
+  snapRedirectUrl: text("snap_redirect_url"),
+  snapCreatedAt: timestamp("snap_created_at", { withTimezone: true }),
   midtransTransactionId: text("midtrans_transaction_id"),
   paymentMethod: text("payment_method"),
   paidAt: timestamp("paid_at", { withTimezone: true }),
@@ -193,7 +198,7 @@ export const order = pgTable("orders", {
   cancelledReason: text("cancelled_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("orders_customer_status_idx").on(t.customerId, t.status)]);
 
 export const orderItem = pgTable("order_item", {
   id: uuid("id").primaryKey().defaultRandom(),

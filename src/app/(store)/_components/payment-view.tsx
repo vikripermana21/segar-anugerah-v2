@@ -18,7 +18,7 @@ type Props =
   | { order: OrderDetail; checkout?: undefined; note?: undefined }
   | { checkout: PaymentCheckout; note?: string; order?: undefined };
 
-type PayError = { message: string; outOfStock?: string[] };
+type PayError = { message: string; outOfStock?: string[]; code?: string };
 
 async function postJson<T>(url: string, body: unknown): Promise<{ status: number; data: T }> {
   const response = await fetch(url, {
@@ -122,6 +122,7 @@ export default function PaymentView(props: Props) {
           setError({
             message: created.data.message ?? "Pesanan gagal dibuat.",
             outOfStock: created.data.outOfStock,
+            code: created.data.code,
           });
           setProcessing(false);
           return;
@@ -239,6 +240,13 @@ export default function PaymentView(props: Props) {
                     Stok kurang: {error.outOfStock.join(", ")}.{" "}
                     <Link href="/cart" className="font-bold text-danger">
                       Ubah keranjang
+                    </Link>
+                  </p>
+                ) : null}
+                {error.code === "too_many_pending" ? (
+                  <p className="mt-0.5 text-[10.5px] leading-[1.45] text-[#7a4638]">
+                    <Link href="/account/orders" className="font-bold text-danger">
+                      Lihat pesanan yang belum dibayar
                     </Link>
                   </p>
                 ) : null}

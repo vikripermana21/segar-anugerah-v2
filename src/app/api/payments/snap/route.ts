@@ -62,6 +62,15 @@ export async function POST(request: Request) {
     );
   }
 
+  // Token Snap tetap berlaku sampai pesanan kedaluwarsa. Pakai ulang supaya
+  // klik Bayar berulang tidak membuat transaksi baru dengan order_id sama.
+  if (row.snapToken && row.snapRedirectUrl) {
+    return Response.json(
+      { ok: true, redirectUrl: row.snapRedirectUrl, token: row.snapToken, reused: true },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const resultUrl = new URL(
     `/checkout/result?order=${encodeURIComponent(row.orderNumber)}`,
     request.url,
@@ -76,8 +85,18 @@ export async function POST(request: Request) {
       customer: { name: session.name, phone: session.phone },
     });
 
+    await db
+      .update(order)
+      .set({
+        snapToken: snap.token,
+        snapRedirectUrl: snap.redirectUrl,
+        snapCreatedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(order.id, row.id));
+
     return Response.json(
-      { ok: true, redirectUrl: snap.redirectUrl, token: snap.token },
+      { ok: true, redirectUrl: snap.redirectUrl, token: snap.token, reused: false },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

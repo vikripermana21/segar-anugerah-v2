@@ -70,11 +70,15 @@ export async function POST(request: Request) {
     }
 
     const status =
-      result.code === "address_not_found" || result.code === "zone_unavailable"
-        ? 404
-        : result.code === "out_of_stock" || result.code === "variant_unavailable"
-          ? 409
-          : 400;
+      result.code === "rate_limited"
+        ? 429
+        : result.code === "address_not_found" || result.code === "zone_unavailable"
+          ? 404
+          : result.code === "out_of_stock" ||
+              result.code === "variant_unavailable" ||
+              result.code === "too_many_pending"
+            ? 409
+            : 400;
 
     return Response.json(result, { status, headers: { "Cache-Control": "no-store" } });
   } catch (error) {

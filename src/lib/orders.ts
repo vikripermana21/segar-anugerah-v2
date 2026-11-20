@@ -5,7 +5,7 @@
  * Harga, nama, dan alamat disalin ke pesanan supaya perubahan katalog
  * tidak mengubah pesanan lama (PRD 3.3 butir 6).
  */
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, gt, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -67,7 +67,9 @@ export type CreateOrderFailure = {
     | "variant_unavailable"
     | "out_of_stock"
     | "address_not_found"
-    | "zone_unavailable";
+    | "zone_unavailable"
+    | "too_many_pending"
+    | "rate_limited";
   message: string;
   /** Varian yang stoknya habis, untuk pesan di keranjang. */
   outOfStock?: string[];
@@ -79,6 +81,9 @@ export type CreateOrderResult =
 
 const MAX_LINES = 50;
 const MAX_QUANTITY = 99;
+const MAX_PENDING_ORDERS = 3;
+const CREATE_WINDOW_MINUTES = 10;
+const MAX_ORDERS_PER_WINDOW = 5;
 
 function isUniqueViolation(error: unknown, constraint?: string): boolean {
   if (typeof error !== "object" || error === null) return false;
@@ -136,6 +141,41 @@ export async function createOrder(
   if (input.idempotencyKey) {
     const existing = await findExisting(input.customerId, input.idempotencyKey);
     if (existing) return { ok: true, ...existing };
+  }
+
+  // Batas sederhana tanpa layanan tambahan: jangan biarkan satu pembeli
+  // menahan stok lewat banyak pesanan yang belum dibayar.
+  const [pending] = await db
+    .select({ total: count() })
+    .from(order)
+    .where(
+      and(
+        eq(order.customerId, input.customerId),
+        eq(order.status, "pending_payment"),
+        gt(order.expiresAt, now),
+      ),
+    );
+
+  if ((pending?.total ?? 0) >= MAX_PENDING_ORDERS) {
+    return {
+      ok: false,
+      code: "too_many_pending",
+      message: `Masih ada ${MAX_PENDING_ORDERS} pesanan yang menunggu pembayaran. Selesaikan atau tunggu kedaluwarsa dulu.`,
+    };
+  }
+
+  const windowStart = new Date(now.getTime() - CREATE_WINDOW_MINUTES * 60 * 1000);
+  const [recent] = await db
+    .select({ total: count() })
+    .from(order)
+    .where(and(eq(order.customerId, input.customerId), gt(order.createdAt, windowStart)));
+
+  if ((recent?.total ?? 0) >= MAX_ORDERS_PER_WINDOW) {
+    return {
+      ok: false,
+      code: "rate_limited",
+      message: "Terlalu banyak percobaan pesanan. Tunggu beberapa menit lalu coba lagi.",
+    };
   }
 
   for (let attempt = 0; attempt < 3; attempt += 1) {

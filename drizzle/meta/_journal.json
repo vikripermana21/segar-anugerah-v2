@@ -15,6 +15,13 @@
       "when": 1795188316324,
       "tag": "0001_last_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795193182820,
+      "tag": "0002_bitter_quicksilver",
+      "breakpoints": true
     }
   ]
 }
