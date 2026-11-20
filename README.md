@@ -12,8 +12,8 @@ dunia visual. Sumber visual toko: [`design/segar-anugerah-client.pen`](design/se
 | 1 | Fondasi: repo, skema, auth, seed, deploy | 🟡 staging live di Vercel + Neon; domain dan R2 belum |
 | — | Permukaan toko (desain `.pen`): 13 layar + keadaan kosong/memuat | 🟡 katalog, akun, dan alamat dari database; pesanan masih contoh |
 | 2 | Katalog & admin katalog | ✅ admin katalog + toko membaca katalog database |
-| 3 | Akun pembeli & keranjang | 🟡 daftar, masuk, profil, alamat, checkout zona DB selesai; keranjang masih di perangkat |
-| 4 | Midtrans & pesanan | ⏸ belum |
+| 3 | Akun pembeli & keranjang | ✅ akun, alamat, checkout zona DB; keranjang tetap di perangkat |
+| 4 | Midtrans & pesanan | 🟡 pesanan + kunci stok + halaman pesanan selesai; Snap, webhook, kedaluwarsa belum |
 | 5 | Dashboard pesanan & laporan | ⏸ belum |
 | 6 | Uji & peluncuran | ⏸ belum |
 
@@ -136,11 +136,10 @@ design/                       # .pen, wireframe, dan artefak desain
 - Kode berbahasa Inggris; teks antarmuka berbahasa Indonesia.
 - Katalog toko dibaca dari database lewat `src/lib/catalog.ts`; `pnpm db:seed` mengisi kategori
   dan 11 produk contoh bila tabelnya masih kosong.
-- Pesanan masih **data contoh** di `src/lib/store-data.ts`; akun, alamat, dan zona checkout sudah
-  dibaca dari database. Jangan menambah klaim (jumlah pelanggan, ulasan, sertifikasi) yang tidak
-  ada di PRD.
-- Pembayaran masih alur tampilan; Midtrans menyusul di Fase 4. Tombol bayar menampilkan hasil
-  contoh, bukan transaksi nyata.
+- Pesanan, akun, alamat, dan zona checkout dibaca dari database. Data contoh tersisa hanya untuk
+  alur pembayaran di `src/lib/store-data.ts`.
+- Pembayaran masih alur tampilan; Midtrans Snap, webhook, dan kedaluwarsa otomatis menyusul di
+  Fase 4. Tombol bayar belum membuat transaksi nyata.
 - `.env.local` tidak masuk git. Jangan pernah menaruh kunci Midtrans di repo.
 - Webhook Midtrans tidak bisa menjangkau `localhost`; saat Fase 4 pakai URL preview Vercel.
 - Nomor HP dinormalkan ke format `08…` dan disimpan unik.

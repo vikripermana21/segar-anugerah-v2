@@ -3,35 +3,25 @@
 import Link from "./transition-link";
 import { useState } from "react";
 import { ChevronRight, ClipboardList, Clock } from "lucide-react";
-import { orders, rupiah } from "@/lib/store-data";
-import type { Order, OrderStatus } from "@/lib/store-data";
+
+import { rupiah } from "@/lib/store-data";
+import {
+  orderFilters,
+  orderStatusMeta,
+  type OrderStatus,
+} from "@/lib/order-status";
+import type { OrderSummary } from "@/lib/order-view";
 import TabBar from "./tab-bar";
 import { EmptyState } from "./ui";
 
-const filters: { key: string; label: string; statuses?: OrderStatus[] }[] = [
-  { key: "semua", label: "Semua" },
-  { key: "belum", label: "Belum dibayar", statuses: ["pending_payment"] },
-  { key: "diproses", label: "Diproses", statuses: [] },
-  { key: "dikirim", label: "Dikirim", statuses: ["shipped"] },
-  { key: "selesai", label: "Selesai", statuses: ["completed"] },
-];
-
-const tone: Record<OrderStatus, string> = {
-  pending_payment: "bg-accent-soft text-accent",
-  shipped: "bg-brand-soft text-brand",
-  completed: "bg-surface-2 text-ink-2",
-  cancelled: "bg-surface-2 text-ink-2",
-};
-
-export function OrderStatusPill({ order }: { order: Order }) {
-  return (
-    <span className={`pill ${tone[order.status]}`}>{order.statusLabel}</span>
-  );
+export function OrderStatusPill({ status }: { status: OrderStatus }) {
+  const meta = orderStatusMeta[status];
+  return <span className={`pill ${meta.tone}`}>{meta.label}</span>;
 }
 
-export default function OrdersView() {
+export default function OrdersView({ orders }: { orders: OrderSummary[] }) {
   const [filter, setFilter] = useState("semua");
-  const active = filters.find((item) => item.key === filter) ?? filters[0];
+  const active = orderFilters.find((item) => item.key === filter) ?? orderFilters[0];
   const rows = active.statuses
     ? orders.filter((order) => active.statuses?.includes(order.status))
     : orders;
@@ -41,7 +31,7 @@ export default function OrdersView() {
       <main className="page pb-[calc(84px+env(safe-area-inset-bottom))] pt-1 lg:pb-16">
         <div className="mx-auto max-w-[760px]">
           <div className="no-scrollbar -mx-5 flex gap-1.5 overflow-x-auto px-5 lg:mx-0 lg:flex-wrap lg:px-0">
-            {filters.map((item) => (
+            {orderFilters.map((item) => (
               <button
                 key={item.key}
                 type="button"
@@ -73,7 +63,7 @@ export default function OrdersView() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-[12.5px] font-bold">{order.number}</h2>
-                    <OrderStatusPill order={order} />
+                    <OrderStatusPill status={order.status} />
                   </div>
                   <p className="mt-1 text-[10.5px] text-ink-3">
                     {order.dateLabel} · {order.itemCount} barang
@@ -89,7 +79,7 @@ export default function OrdersView() {
                     {order.status === "pending_payment" ? (
                       <Clock size={13} className="mt-0.5 shrink-0" />
                     ) : null}
-                    {order.note}
+                    {orderStatusMeta[order.status].note}
                   </p>
 
                   <div className="my-2.5 h-px bg-border" />
