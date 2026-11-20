@@ -2,12 +2,18 @@
  * Query pesanan untuk halaman pembeli. Semua query difilter `customer_id`
  * supaya pembeli tidak bisa membuka pesanan orang lain.
  */
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { order, orderItem, orderStatusHistory } from "@/db/schema";
 import type { AddressSnapshot } from "./orders";
 import { orderStatusMeta, type OrderStatus } from "./order-status";
+
+export type OrderPage = {
+  orders: OrderSummary[];
+  /** Cursor untuk halaman berikutnya, null bila sudah habis. */
+  nextCursor: string | null;
+};
 
 export type OrderSummary = {
   number: string;
@@ -71,29 +77,76 @@ function deliveryLabel(value: string): string {
   return deliveryFormat.format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-export async function listCustomerOrders(customerId: string): Promise<OrderSummary[]> {
+const PAGE_SIZE = 20;
+
+type Cursor = { createdAt: Date; id: string };
+
+function encodeCursor(row: { createdAt: Date; id: string }): string {
+  return Buffer.from(`${row.createdAt.getTime()}|${row.id}`).toString("base64url");
+}
+
+function decodeCursor(value: string | null | undefined): Cursor | null {
+  if (!value) return null;
+  try {
+    const [ms, id] = Buffer.from(value, "base64url").toString("utf8").split("|");
+    const time = Number(ms);
+    if (!Number.isFinite(time) || !id) return null;
+    return { createdAt: new Date(time), id };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Riwayat pesanan dengan keyset pagination. Cursor memakai `created_at` + `id`
+ * supaya halaman tidak bergeser saat ada pesanan baru masuk.
+ */
+export async function listCustomerOrders(
+  customerId: string,
+  options: { statuses?: OrderStatus[]; cursor?: string | null; limit?: number } = {},
+): Promise<OrderPage> {
+  const limit = Math.min(Math.max(options.limit ?? PAGE_SIZE, 1), 50);
+  const cursor = decodeCursor(options.cursor);
+
+  const filters = [eq(order.customerId, customerId)];
+  if (options.statuses?.length) filters.push(inArray(order.status, options.statuses));
+  if (cursor) {
+    filters.push(
+      or(
+        lt(order.createdAt, cursor.createdAt),
+        and(eq(order.createdAt, cursor.createdAt), lt(order.id, cursor.id)),
+      )!,
+    );
+  }
+
   const rows = await db
     .select({
+      id: order.id,
       number: order.orderNumber,
       status: order.status,
       createdAt: order.createdAt,
-      deliveryDate: order.deliveryDate,
       total: order.total,
       itemCount: sql<number>`(select count(*) from ${orderItem} where ${orderItem.orderId} = ${order.id})`,
     })
     .from(order)
-    .where(eq(order.customerId, customerId))
-    .orderBy(desc(order.createdAt))
-    .limit(50);
+    .where(and(...filters))
+    .orderBy(desc(order.createdAt), desc(order.id))
+    .limit(limit + 1);
 
-  return rows.map((row) => ({
-    number: row.number,
-    status: row.status as OrderStatus,
-    createdLabel: dateTimeLabel(row.createdAt),
-    dateLabel: dateOnly.format(row.createdAt),
-    itemCount: Number(row.itemCount),
-    total: row.total,
-  }));
+  const page = rows.slice(0, limit);
+  const last = page.at(-1);
+
+  return {
+    orders: page.map((row) => ({
+      number: row.number,
+      status: row.status as OrderStatus,
+      createdLabel: dateTimeLabel(row.createdAt),
+      dateLabel: dateOnly.format(row.createdAt),
+      itemCount: Number(row.itemCount),
+      total: row.total,
+    })),
+    nextCursor: rows.length > limit && last ? encodeCursor(last) : null,
+  };
 }
 
 export async function getCustomerOrder(

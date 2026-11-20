@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "./transition-link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronRight, ClipboardList, Clock } from "lucide-react";
 
 import { rupiah } from "@/lib/store-data";
@@ -10,7 +10,7 @@ import {
   orderStatusMeta,
   type OrderStatus,
 } from "@/lib/order-status";
-import type { OrderSummary } from "@/lib/order-view";
+import type { OrderPage, OrderSummary } from "@/lib/order-view";
 import TabBar from "./tab-bar";
 import { EmptyState } from "./ui";
 
@@ -19,12 +19,57 @@ export function OrderStatusPill({ status }: { status: OrderStatus }) {
   return <span className={`pill ${meta.tone}`}>{meta.label}</span>;
 }
 
-export default function OrdersView({ orders }: { orders: OrderSummary[] }) {
-  const [filter, setFilter] = useState("semua");
-  const active = orderFilters.find((item) => item.key === filter) ?? orderFilters[0];
-  const rows = active.statuses
-    ? orders.filter((order) => active.statuses?.includes(order.status))
-    : orders;
+async function fetchPage(status: string, cursor: string | null): Promise<OrderPage> {
+  const params = new URLSearchParams({ status });
+  if (cursor) params.set("cursor", cursor);
+  const response = await fetch(`/api/orders?${params.toString()}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Gagal memuat pesanan.");
+  const data = (await response.json()) as { ok: boolean } & OrderPage;
+  return { orders: data.orders, nextCursor: data.nextCursor };
+}
+
+export default function OrdersView({
+  initialOrders,
+  initialCursor,
+  initialFilter,
+}: {
+  initialOrders: OrderSummary[];
+  initialCursor: string | null;
+  initialFilter: string;
+}) {
+  const [filter, setFilter] = useState(initialFilter);
+  const [rows, setRows] = useState(initialOrders);
+  const [cursor, setCursor] = useState(initialCursor);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const requestId = useRef(0);
+
+  async function load(nextFilter: string, nextCursor: string | null, append: boolean) {
+    const id = requestId.current + 1;
+    requestId.current = id;
+    setLoading(true);
+    setError("");
+
+    try {
+      const page = await fetchPage(nextFilter, nextCursor);
+      if (requestId.current !== id) return;
+      setRows((prev) => (append ? [...prev, ...page.orders] : page.orders));
+      setCursor(page.nextCursor);
+    } catch {
+      if (requestId.current !== id) return;
+      setError("Pesanan gagal dimuat. Coba lagi.");
+    } finally {
+      if (requestId.current === id) setLoading(false);
+    }
+  }
+
+  function chooseFilter(key: string) {
+    if (key === filter || loading) return;
+    setFilter(key);
+    setRows([]);
+    setCursor(null);
+    void load(key, null, false);
+  }
 
   return (
     <>
@@ -35,7 +80,7 @@ export default function OrdersView({ orders }: { orders: OrderSummary[] }) {
               <button
                 key={item.key}
                 type="button"
-                onClick={() => setFilter(item.key)}
+                onClick={() => chooseFilter(item.key)}
                 data-active={filter === item.key}
                 aria-pressed={filter === item.key}
                 className="chip h-[29px] text-[10.5px]"
@@ -45,7 +90,13 @@ export default function OrdersView({ orders }: { orders: OrderSummary[] }) {
             ))}
           </div>
 
-          {rows.length === 0 ? (
+          {loading && rows.length === 0 ? (
+            <div className="mt-3.5 space-y-2.5">
+              {[0, 1].map((key) => (
+                <div key={key} className="h-[132px] animate-pulse rounded-[15px] bg-surface-2" />
+              ))}
+            </div>
+          ) : rows.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
               title="Belum ada pesanan"
@@ -109,8 +160,25 @@ export default function OrdersView({ orders }: { orders: OrderSummary[] }) {
                   </div>
                 </article>
               ))}
+
+              {cursor ? (
+                <button
+                  type="button"
+                  onClick={() => void load(filter, cursor, true)}
+                  disabled={loading}
+                  className="btn-secondary mt-1 w-full text-[12px]"
+                >
+                  {loading ? "Memuat…" : "Muat pesanan lama"}
+                </button>
+              ) : null}
             </div>
           )}
+
+          {error ? (
+            <p role="alert" className="mt-3 text-[11px] font-semibold text-danger">
+              {error}
+            </p>
+          ) : null}
         </div>
       </main>
 
