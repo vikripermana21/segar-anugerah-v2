@@ -9,6 +9,7 @@ import { category, product, productImage, productVariant } from "@/db/schema";
 import { rupiah } from "@/lib/store-data";
 
 import { ActionForm } from "../../_components/action-form";
+import { ImageUploadForm } from "../../_components/image-upload-form";
 import {
   Badge,
   Card,
@@ -373,29 +374,14 @@ export default async function AdminEditProductPage({
 
               {images.length < 4 ? (
                 <div className="mt-4">
-                  <ActionForm action={addImage} submitLabel="Tambah foto">
-                    <input type="hidden" name="productId" value={row.id} />
-
-                    <label className="admin-label">
-                      URL gambar
-                      <input
-                        name="url"
-                        required
-                        placeholder="/products/nila.jpg"
-                        className={inputClass}
-                      />
-                    </label>
-                    <label className="admin-label">
-                      Teks alternatif
-                      <input name="alt" placeholder="Ikan nila segar" className={inputClass} />
-                    </label>
-                  </ActionForm>
+                  <ImageUploadForm productId={row.id} action={addImage} />
                 </div>
               ) : null}
 
               <p className="admin-help mt-3">
-                Maksimal 4 foto, maksimal 2 MB per foto. Unggah berkas menyusul saat penyimpanan R2
-                tersambung; untuk sekarang isi URL gambar. Foto utama pindah otomatis kalau dihapus.
+                Maksimal 4 foto. Foto dikecilkan di browser lalu diunggah langsung ke Cloudflare R2,
+                jadi fungsi Vercel tidak melewati batas 4,5 MB. Foto utama pindah otomatis kalau
+                dihapus.
               </p>
             </div>
           </Card>

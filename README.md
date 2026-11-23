@@ -100,7 +100,41 @@ Halaman pesanan, pengguna admin, dan laporan belum dibuat.
 | `pnpm db:generate` | Buat migrasi dari perubahan `src/db/schema.ts` |
 | `pnpm db:migrate` | Terapkan migrasi |
 | `pnpm db:seed` | Buat admin pertama + pengaturan toko (aman diulang) |
+| `pnpm storage:upload` | Pindahkan foto `public/products` ke R2 lalu perbarui URL di database |
 | `pnpm db:studio` | Drizzle Studio (lihat isi database) |
+
+## Foto produk (R2)
+
+Foto disimpan di Cloudflare R2. Browser mengecilkan foto (sisi terpanjang 2000 px, WebP)
+lalu mengunggahnya langsung ke bucket lewat URL PUT bertanda tangan; server hanya menerbitkan
+tanda tangan, jadi body request Vercel 4,5 MB tidak pernah dilewati.
+
+Isi lima variabel di `.env.local` dan Vercel (Production + Preview):
+
+```
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=
+R2_PUBLIC_BASE_URL=        # https://pub-<hash>.r2.dev, tanpa garis miring di akhir
+```
+
+Bucket perlu CORS agar browser boleh `PUT` dari origin situs:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:3000", "https://segar-anugerah-v2.vercel.app"],
+    "AllowedMethods": ["PUT", "GET"],
+    "AllowedHeaders": ["content-type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Foto lama di `public/products` dipindah sekali dengan `pnpm storage:upload`. Skrip itu aman
+diulang. Setelah pindah, `R2_PUBLIC_BASE_URL` juga dipakai `next.config.ts` untuk
+`images.remotePatterns`; tanpa variabel itu, `next/image` menolak URL R2.
 
 ## Peta folder
 
