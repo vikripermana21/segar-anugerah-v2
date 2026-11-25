@@ -2,7 +2,7 @@
  * Laporan admin. Omzet dihitung saat pesanan bertransisi ke `completed`,
  * memakai `order_status_history`; `created_at` pesanan tidak dipakai.
  */
-import { and, count, desc, eq, gte, lt, sql, sum } from "drizzle-orm";
+import { and, count, desc, eq, gte, lt, notInArray, sql, sum } from "drizzle-orm";
 
 import { db } from "@/db";
 import { order, orderItem, orderStatusHistory } from "@/db/schema";
@@ -138,6 +138,7 @@ async function completedOrders(start: Date, endExclusive: Date): Promise<Complet
         eq(orderStatusHistory.toStatus, "completed"),
         gte(orderStatusHistory.createdAt, start),
         lt(orderStatusHistory.createdAt, endExclusive),
+        notInArray(order.status, ["cancelled", "expired", "refunded"]),
       ),
     )
     .orderBy(orderStatusHistory.orderId, orderStatusHistory.createdAt);
@@ -228,11 +229,13 @@ export async function revenueReport(input: {
       completedAt: orderStatusHistory.createdAt,
     })
     .from(orderStatusHistory)
+    .innerJoin(order, eq(order.id, orderStatusHistory.orderId))
     .where(
       and(
         eq(orderStatusHistory.toStatus, "completed"),
         gte(orderStatusHistory.createdAt, range.start),
         lt(orderStatusHistory.createdAt, range.endExclusive),
+        notInArray(order.status, ["cancelled", "expired", "refunded"]),
       ),
     )
     .as("completed_orders_in_range");
