@@ -5,6 +5,9 @@
 
 export const ORDER_EXPIRY_MINUTES = 30;
 
+/** Pesanan WhatsApp menunggu konfirmasi transfer bank. */
+export const WHATSAPP_HOLD_MINUTES = 12 * 60;
+
 const jakarta = "Asia/Jakarta";
 
 const dateParts = new Intl.DateTimeFormat("en-CA", {
@@ -63,8 +66,8 @@ export function orderNumber(now: Date, random: () => number = Math.random): stri
   return `SA-${year.slice(2)}${month}${day}-${suffix}`;
 }
 
-export function orderExpiry(now: Date): Date {
-  return new Date(now.getTime() + ORDER_EXPIRY_MINUTES * 60 * 1000);
+export function orderExpiry(now: Date, minutes = ORDER_EXPIRY_MINUTES): Date {
+  return new Date(now.getTime() + minutes * 60 * 1000);
 }
 
 export type FreeShippingSetting = {

@@ -4,9 +4,11 @@ import { notFound } from "next/navigation";
 import { Check, Info, MapPin, Phone } from "lucide-react";
 
 import { requireCustomer } from "@/lib/customer-guard";
+import { getStoreSettings } from "@/lib/catalog";
 import { getCustomerOrder } from "@/lib/order-view";
 import { orderStatusMeta } from "@/lib/order-status";
 import { rupiah, storeFacts } from "@/lib/store-data";
+import { bankLines, whatsappOrderUrl } from "@/lib/whatsapp-order";
 
 import { PageBar } from "../../../_components/app-bar";
 import { OrderStatusPill } from "../../../_components/orders-view";
@@ -32,6 +34,10 @@ export default async function OrderDetailPage({
 
   const pending = order.status === "pending_payment";
   const late = order.status === "paid_late";
+  const whatsappPending = pending && order.paymentMethod === "whatsapp";
+  const settings = await getStoreSettings();
+  const bank = whatsappPending ? bankLines(settings) : [];
+  const waUrl = whatsappPending ? whatsappOrderUrl(order, settings) : null;
 
   return (
     <div className="min-h-dvh">
@@ -46,7 +52,7 @@ export default async function OrderDetailPage({
               </h1>
               <p className="mt-1 text-[10.5px] text-ink-3">Dibuat {order.createdLabel}</p>
             </div>
-            <OrderStatusPill status={order.status} />
+            <OrderStatusPill status={order.status} paymentMethod={order.paymentMethod} />
           </div>
 
           {pending || late ? (
@@ -66,12 +72,18 @@ export default async function OrderDetailPage({
                 <p
                   className={`text-[11.5px] font-bold ${late ? "text-danger" : "text-accent"}`}
                 >
-                  {late ? "Pembayaran perlu ditinjau" : "Pembayaran belum selesai"}
+                  {late
+                    ? "Pembayaran perlu ditinjau"
+                    : whatsappPending
+                      ? "Menunggu konfirmasi toko"
+                      : "Pembayaran belum selesai"}
                 </p>
                 <p className="mt-0.5 text-[10.5px] leading-[1.45] text-[#7a4638]">
                   {late
                     ? "Pembayaran masuk setelah pesanan kedaluwarsa. Toko akan menghubungi Anda untuk memastikan stok."
-                    : `Stok masih ditahan sampai pukul ${order.expiresLabel ?? "—"}. Selesaikan pembayaran agar pesanan diteruskan ke toko.`}
+                    : whatsappPending
+                      ? `Kirim bukti transfer lewat WhatsApp. Stok ditahan sampai ${order.expiresLabel ?? "—"}.`
+                      : `Stok masih ditahan sampai ${order.expiresLabel ?? "—"}. Selesaikan pembayaran agar pesanan diteruskan ke toko.`}
                 </p>
               </div>
             </div>
@@ -179,19 +191,49 @@ export default async function OrderDetailPage({
             <dl className="mt-2 space-y-2">
               <div className="flex items-center justify-between gap-3 text-[12px]">
                 <dt className="text-ink-2">Metode</dt>
-                <dd className="font-medium">{order.paymentMethod ?? "—"}</dd>
+                <dd className="font-medium">
+                  {order.paymentMethod === "whatsapp"
+                    ? "Transfer bank"
+                    : (order.paymentMethod ?? "—")}
+                </dd>
               </div>
               <div className="flex items-center justify-between gap-3 text-[12px]">
                 <dt className="text-ink-2">{order.paidLabel ? "Dibayar" : "Status"}</dt>
                 <dd className="text-right font-medium">
-                  {order.paidLabel ?? orderStatusMeta[order.status].label}
+                  {order.paidLabel ??
+                    (whatsappPending ? "Menunggu konfirmasi" : orderStatusMeta[order.status].label)}
                 </dd>
               </div>
             </dl>
             <p className="mt-2 text-[10px] leading-[1.45] text-ink-3">
-              {orderStatusMeta[order.status].note}
+              {whatsappPending
+                ? "Toko mengonfirmasi transfer lewat WhatsApp. Pesanan dibatalkan otomatis setelah 12 jam tanpa konfirmasi."
+                : orderStatusMeta[order.status].note}
             </p>
           </section>
+
+          {whatsappPending ? (
+            <section className="mt-3 rounded-2xl border border-border bg-surface p-4">
+              <h2 className="text-[12.5px] font-bold">Transfer bank</h2>
+              {bank.length > 0 ? (
+                <div className="mt-2">
+                  {bank.map((line) => (
+                    <p key={line} className="text-[12.5px] font-semibold">
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1.5 text-[11px] leading-[1.45] text-ink-3">
+                  Detail rekening dikirim toko lewat WhatsApp.
+                </p>
+              )}
+              <p className="mt-2 text-[10.5px] leading-[1.45] text-ink-3">
+                Kirim bukti transfer ke WhatsApp toko. Stok ditahan sampai{" "}
+                {order.expiresLabel ?? "—"}.
+              </p>
+            </section>
+          ) : null}
 
           {order.note ? (
             <p className="mt-3 rounded-[14px] bg-surface-2 px-3 py-2.5 text-[10.5px] leading-[1.45] text-ink-2">
@@ -220,7 +262,22 @@ export default async function OrderDetailPage({
         </div>
       </main>
 
-      {pending ? (
+      {whatsappPending ? (
+        waUrl ? (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface">
+            <div className="page py-3 pb-[calc(18px+env(safe-area-inset-bottom))]">
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary w-full"
+              >
+                Buka WhatsApp toko
+              </a>
+            </div>
+          </div>
+        ) : null
+      ) : pending ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface">
           <div className="page py-3 pb-[calc(18px+env(safe-area-inset-bottom))]">
             <Link

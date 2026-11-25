@@ -172,6 +172,9 @@ export default async function AdminOrderListPage({
                     </td>
                     <td>
                       <Badge tone={statusTone(order.status)}>{order.statusLabel}</Badge>
+                      {order.paymentMethod === "whatsapp" ? (
+                        <span className="admin-muted mt-1 block">Transfer bank</span>
+                      ) : null}
                     </td>
                     <td className="text-right">
                       <Link

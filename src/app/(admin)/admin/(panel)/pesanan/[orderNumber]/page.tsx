@@ -108,6 +108,21 @@ export default async function AdminOrderDetailPage({
         </div>
       ) : null}
 
+      {order.status === "pending_payment" && order.paymentMethod === "whatsapp" ? (
+        <div className="admin-alert mt-4">
+          <Clock size={18} strokeWidth={2} className="text-amber-600" />
+          <div>
+            <p className="text-[12.5px] font-semibold text-ink">
+              Menunggu konfirmasi transfer bank
+            </p>
+            <p className="mt-0.5 text-[11px] leading-relaxed text-ink-2">
+              Batas konfirmasi {order.expiresAtLabel}. Setelah itu pesanan dibatalkan otomatis
+              dan stok dikembalikan. Hubungi pembeli lewat WhatsApp sebelum menandai dibayar.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       <div className="admin-split mt-5">
         <div className="flex min-w-0 flex-col gap-4">
           <Card>
@@ -221,6 +236,22 @@ export default async function AdminOrderDetailPage({
             <CardHead title="Aksi" note={order.statusNote} />
             <CardBody>
               <div className="flex flex-col gap-2.5">
+                {order.actions.confirm ? (
+                  <ActionForm
+                    action={changeOrderStatus}
+                    submitLabel="Tandai sudah dibayar"
+                    pendingLabel="Mengonfirmasi…"
+                    className="flex flex-col gap-2"
+                  >
+                    <input type="hidden" name="orderNumber" value={order.number} />
+                    <input type="hidden" name="action" value="confirm" />
+                    <p className="rounded-lg bg-surface-2 px-3 py-2 text-[10.5px] leading-relaxed text-ink-3">
+                      Pastikan transfer sudah masuk sebelum menandai dibayar. Batas konfirmasi{" "}
+                      {order.expiresAtLabel}.
+                    </p>
+                  </ActionForm>
+                ) : null}
+
                 {order.actions.dispatch ? (
                   <ActionForm
                     action={changeOrderStatus}
@@ -303,7 +334,8 @@ export default async function AdminOrderDetailPage({
                   </details>
                 ) : null}
 
-                {!order.actions.dispatch &&
+                {!order.actions.confirm &&
+                !order.actions.dispatch &&
                 !order.actions.complete &&
                 !order.actions.cancel &&
                 !order.actions.refund ? (
@@ -366,7 +398,11 @@ export default async function AdminOrderDetailPage({
               <dl className="flex flex-col gap-2 text-[12px]">
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-ink-2">Metode</dt>
-                  <dd className="font-medium text-ink">{order.paymentMethod ?? "—"}</dd>
+                  <dd className="font-medium text-ink">
+                    {order.paymentMethod === "whatsapp"
+                      ? "Transfer bank (WhatsApp)"
+                      : (order.paymentMethod ?? "—")}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-ink-2">Dibayar</dt>

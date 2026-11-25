@@ -198,3 +198,27 @@
 - Why: pesanan dihitung sebagai penjualan saat selesai, bukan saat dibayar; `order_status_history` menyimpan waktu itu
 - Rejected: memakai `orders.paid_at` atau `orders.updated_at`
 - Rests on: docs/PRD.md §2.2 5.6
+
+## 2026-11-25 · Pesanan lewat WhatsApp + transfer bank sebelum Midtrans produksi
+- Decided by: pemilik
+- Why: pengajuan Midtrans produksi masih perlu melengkapi data; toko tetap bisa menerima pesanan tanpa menunggu akun produksi
+- Rejected: mematikan checkout sampai Midtrans siap
+- Rests on: docs/PRD.md §9.2, src/app/(admin)/admin/(panel)/pengaturan
+
+## 2026-11-25 · Stok pesanan WhatsApp ditahan 12 jam
+- Decided by: pemilik
+- Why: transfer bank butuh waktu konfirmasi; 12 jam cukup dan stok tetap kembali otomatis
+- Rejected: memakai 30 menit milik Midtrans, dan membiarkan stok tertahan tanpa batas
+- Rests on: src/lib/order-rules.ts, src/app/api/cron/expire-orders/route.ts
+
+## 2026-11-25 · Timeout WhatsApp memakai status `cancelled`, bukan `expired`
+- Decided by: pemilik ("dibatalkan dan stok dikembalikan")
+- Why: pesanan berhenti karena admin tidak mengonfirmasi, bukan karena pembayaran online kedaluwarsa
+- Rejected: menyamakan seluruh timeout dengan `expired`
+- Rests on: src/app/api/cron/expire-orders/route.ts
+
+## 2026-11-25 · Kanal per pesanan disimpan di `payment_method`
+- Decided by: Hermes (default)
+- Why: mode toko bisa berganti bolak-balik; pesanan lama harus tetap memakai kanalnya sendiri
+- Rejected: membaca kanal dari pengaturan global saat halaman pesanan dibuka
+- Rests on: src/lib/orders.ts, src/app/api/payments/snap/route.ts

@@ -2,10 +2,12 @@
 
 import Link from "./transition-link";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Clock, Info, MapPin, ShoppingBag, Truck } from "lucide-react";
 
 import type { AddressRow, DeliveryArea } from "@/lib/address-types";
 import type { OrderDetail } from "@/lib/order-view";
+import { bankLines } from "@/lib/whatsapp-order";
 import { shippingFor } from "@/lib/shipping";
 import { rupiah } from "@/lib/store-data";
 import { useCart, useStoreSettings } from "../cart";
@@ -35,9 +37,12 @@ export default function PaymentView(props: Props) {
   const checkout = props.checkout ?? null;
   const { lines, count, subtotal, ready, clear } = useCart();
   const settings = useStoreSettings();
+  const router = useRouter();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<PayError | null>(null);
   const idempotencyKey = useRef<string | null>(null);
+  const whatsappMode = !existing && settings.paymentMode === "whatsapp";
+  const bank = bankLines(settings);
 
   const playableLines = existing
     ? existing.items.map((item) => ({
@@ -99,13 +104,14 @@ export default function PaymentView(props: Props) {
 
     try {
       let orderNumber = existing?.number;
+      let createdPaymentMethod = existing?.paymentMethod ?? null;
 
       if (!orderNumber) {
         const key = idempotencyKey.current ?? crypto.randomUUID();
         idempotencyKey.current = key;
 
         const created = await postJson<
-          | { ok: true; orderNumber: string }
+          | { ok: true; orderNumber: string; paymentMethod: string | null }
           | { ok: false; code?: string; message?: string; outOfStock?: string[] }
         >("/api/checkout", {
           addressId: checkout!.address.id,
@@ -128,6 +134,13 @@ export default function PaymentView(props: Props) {
           return;
         }
         orderNumber = created.data.orderNumber;
+        createdPaymentMethod = created.data.paymentMethod;
+      }
+
+      if (createdPaymentMethod === "whatsapp") {
+        clear();
+        router.push(`/checkout/result?order=${encodeURIComponent(orderNumber)}`);
+        return;
       }
 
       const snap = await postJson<{ ok: boolean; redirectUrl?: string; message?: string }>(
@@ -154,7 +167,7 @@ export default function PaymentView(props: Props) {
       <main className="page pb-[calc(104px+env(safe-area-inset-bottom))] pt-1 lg:pb-16">
         <div className="lg:grid lg:grid-cols-[1.4fr_1fr] lg:items-start lg:gap-8">
           <div className="space-y-4">
-            <CheckoutSteps step={2} label="Pembayaran" />
+            <CheckoutSteps step={2} label={whatsappMode ? "Konfirmasi" : "Pembayaran"} />
 
             {outLines.length > 0 ? (
               <div className="flex gap-2.5 rounded-[14px] bg-danger-soft px-3 py-3">
@@ -224,7 +237,9 @@ export default function PaymentView(props: Props) {
                   <Info size={14} />
                 </span>
                 <div>
-                  <p className="text-[11.5px] font-bold text-ink-2">Menyiapkan pembayaran</p>
+                  <p className="text-[11.5px] font-bold text-ink-2">
+                    {whatsappMode ? "Membuat pesanan" : "Menyiapkan pembayaran"}
+                  </p>
                   <p className="mt-0.5 text-[10.5px] leading-[1.45] text-ink-2">
                     Jangan tutup halaman ini. Stok dikunci saat pesanan dibuat.
                   </p>
@@ -246,7 +261,7 @@ export default function PaymentView(props: Props) {
                 {error.code === "too_many_pending" ? (
                   <p className="mt-0.5 text-[10.5px] leading-[1.45] text-[#7a4638]">
                     <Link href="/account/orders" className="font-bold text-danger">
-                      Lihat pesanan yang belum dibayar
+                      Lihat pesanan yang belum dikonfirmasi
                     </Link>
                   </p>
                 ) : null}
@@ -274,7 +289,7 @@ export default function PaymentView(props: Props) {
                 ) : null}
                 <div className="h-px bg-border" />
                 <div className="flex items-center justify-between gap-3 text-[15px]">
-                  <dt className="text-ink-2">Bayar</dt>
+                  <dt className="text-ink-2">{whatsappMode ? "Total tagihan" : "Bayar"}</dt>
                   <dd className="tabular font-bold">{rupiah(total)}</dd>
                 </div>
               </dl>
@@ -297,21 +312,52 @@ export default function PaymentView(props: Props) {
 
           <div className="mt-4 space-y-3 lg:mt-0">
             <section>
-              <h2 className="text-[12.5px] font-bold">Metode pembayaran</h2>
-              <p className="mt-1 text-[11.5px] text-ink-2">QRIS, e-wallet, atau Virtual Account</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {["QRIS", "GoPay", "BCA VA"].map((method) => (
-                  <span
-                    key={method}
-                    className="flex h-[26px] items-center rounded-[7px] border border-border bg-surface px-2.5 text-[9.5px] font-bold text-ink-2"
-                  >
-                    {method}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-2 text-[10.5px] text-ink-3">
-                Dipilih di halaman Midtrans setelah menekan Bayar.
-              </p>
+              <h2 className="text-[12.5px] font-bold">
+                {whatsappMode ? "Transfer bank" : "Metode pembayaran"}
+              </h2>
+              {whatsappMode ? (
+                <>
+                  <p className="mt-1 text-[11.5px] text-ink-2">
+                    Transfer bank, dikonfirmasi lewat WhatsApp toko.
+                  </p>
+                  {bank.length > 0 ? (
+                    <div className="mt-2 rounded-xl border border-border bg-surface px-3 py-2.5">
+                      {bank.map((line) => (
+                        <p key={line} className="text-[11.5px] font-semibold text-ink">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 rounded-xl border border-border bg-surface px-3 py-2.5 text-[10.5px] leading-relaxed text-ink-3">
+                      Detail rekening dikirim toko lewat WhatsApp.
+                    </p>
+                  )}
+                  <p className="mt-2 text-[10.5px] leading-relaxed text-ink-3">
+                    Setelah pesanan dibuat, kirim ringkasan ke WhatsApp toko beserta bukti
+                    transfer.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-1 text-[11.5px] text-ink-2">
+                    QRIS, e-wallet, atau Virtual Account
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {["QRIS", "GoPay", "BCA VA"].map((method) => (
+                      <span
+                        key={method}
+                        className="flex h-[26px] items-center rounded-[7px] border border-border bg-surface px-2.5 text-[9.5px] font-bold text-ink-2"
+                      >
+                        {method}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[10.5px] text-ink-3">
+                    Dipilih di halaman Midtrans setelah menekan Bayar.
+                  </p>
+                </>
+              )}
             </section>
 
             <div className="flex gap-2.5 rounded-[14px] bg-accent-soft px-3 py-3">
@@ -319,19 +365,25 @@ export default function PaymentView(props: Props) {
                 <Clock size={14} />
               </span>
               <div>
-                <p className="text-[12px] font-bold text-accent">Bayar dalam 30 menit</p>
+                <p className="text-[12px] font-bold text-accent">
+                  {whatsappMode ? "Konfirmasi dalam 12 jam" : "Bayar dalam 30 menit"}
+                </p>
                 <p className="mt-0.5 text-[11px] leading-[1.45] text-brand">
-                  {existing?.expiresLabel
-                    ? `Stok ditahan sampai ${existing.expiresLabel}.`
-                    : "Stok ditahan 30 menit setelah pesanan dibuat."}{" "}
-                  Lewat itu pesanan kedaluwarsa dan stok dilepas.
+                  {whatsappMode
+                    ? "Stok ditahan 12 jam. Lewat itu pesanan dibatalkan otomatis dan stok dikembalikan."
+                    : existing?.expiresLabel
+                      ? `Stok ditahan sampai ${existing.expiresLabel}.`
+                      : "Stok ditahan 30 menit setelah pesanan dibuat."}{" "}
+                  {whatsappMode ? "" : "Lewat itu pesanan kedaluwarsa dan stok dilepas."}
                 </p>
               </div>
             </div>
 
             <p className="flex items-start gap-2 px-1 text-[10.5px] leading-[1.45] text-ink-3">
               <Info size={13} className="mt-0.5 shrink-0" />
-              Nominal dan nomor pesanan dibuat ulang bila pembayaran kedaluwarsa.
+              {whatsappMode
+                ? "Nomor pesanan dan total tidak berubah setelah dikirim ke WhatsApp. Toko mengonfirmasi pembayaran sebelum barang disiapkan."
+                : "Nominal dan nomor pesanan dibuat ulang bila pembayaran kedaluwarsa."}
             </p>
           </div>
         </div>
@@ -353,8 +405,10 @@ export default function PaymentView(props: Props) {
               {processing ? (
                 <>
                   <span className="h-[15px] w-[15px] animate-spin rounded-full border-2 border-cream border-t-transparent" />
-                  Memproses…
+                  {whatsappMode ? "Membuat pesanan…" : "Memproses…"}
                 </>
+              ) : whatsappMode ? (
+                "Pesan lewat WhatsApp"
               ) : (
                 `Bayar ${rupiah(total)}`
               )}

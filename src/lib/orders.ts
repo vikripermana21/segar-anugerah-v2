@@ -24,6 +24,7 @@ import {
   orderExpiry,
   orderNumber as orderNumberRule,
   shippingDiscount,
+  WHATSAPP_HOLD_MINUTES,
 } from "./order-rules";
 
 export type AddressSnapshot = {
@@ -58,6 +59,8 @@ export type CreatedOrder = {
   total: number;
   deliveryDate: string;
   expiresAt: string;
+  /** `whatsapp` berarti transfer bank lewat konfirmasi toko, bukan Midtrans. */
+  paymentMethod: string | null;
 };
 
 export type CreateOrderFailure = {
@@ -114,6 +117,7 @@ async function findExisting(
     total: row.total,
     deliveryDate: row.deliveryDate,
     expiresAt: row.expiresAt.toISOString(),
+    paymentMethod: row.paymentMethod,
   };
 }
 
@@ -160,7 +164,7 @@ export async function createOrder(
     return {
       ok: false,
       code: "too_many_pending",
-      message: `Masih ada ${MAX_PENDING_ORDERS} pesanan yang menunggu pembayaran. Selesaikan atau tunggu kedaluwarsa dulu.`,
+      message: `Masih ada ${MAX_PENDING_ORDERS} pesanan yang belum dikonfirmasi. Selesaikan atau tunggu kedaluwarsa dulu.`,
     };
   }
 
@@ -301,7 +305,11 @@ export async function createOrder(
         );
         const total = subtotal + shippingFee - discount;
         const delivery = deliveryDateRule(now, setting?.orderCutoffHour ?? 16);
-        const expiresAt = orderExpiry(now);
+        const whatsapp = (setting?.paymentMode ?? "whatsapp") === "whatsapp";
+        const expiresAt = orderExpiry(
+          now,
+          whatsapp ? WHATSAPP_HOLD_MINUTES : undefined,
+        );
         const number = orderNumberRule(now);
 
         const snapshot: AddressSnapshot = {
@@ -332,6 +340,7 @@ export async function createOrder(
             notes: input.note?.trim() || null,
             midtransOrderId: number,
             idempotencyKey: input.idempotencyKey ?? null,
+            paymentMethod: whatsapp ? "whatsapp" : null,
             expiresAt,
           })
           .returning({ id: order.id });
@@ -357,7 +366,9 @@ export async function createOrder(
           fromStatus: null,
           toStatus: "pending_payment",
           changedBy: `customer:${input.customerId}`,
-          note: "Pesanan dibuat, stok dikunci.",
+          note: whatsapp
+            ? "Pesanan dibuat, stok dikunci. Menunggu konfirmasi transfer lewat WhatsApp."
+            : "Pesanan dibuat, stok dikunci.",
         });
 
         return {
@@ -369,6 +380,7 @@ export async function createOrder(
           total,
           deliveryDate: delivery,
           expiresAt: expiresAt.toISOString(),
+          paymentMethod: whatsapp ? "whatsapp" : null,
         };
       });
 

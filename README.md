@@ -14,6 +14,7 @@ dunia visual. Sumber visual toko: [`design/segar-anugerah-client.pen`](design/se
 | 2 | Katalog & admin katalog | ✅ admin katalog + toko membaca katalog database |
 | 3 | Akun pembeli & keranjang | ✅ akun, alamat, checkout zona DB; keranjang tetap di perangkat |
 | 4 | Midtrans & pesanan | ✅ pesanan, kunci stok, Snap sandbox, webhook, kedaluwarsa |
+| — | Kanal pesanan WhatsApp + transfer bank | ✅ sementara; Midtrans tetap tersimpan, nonaktif lewat pengaturan |
 | 5 | Dashboard pesanan & laporan | ✅ pesanan, pengguna admin, omzet, produk terlaris |
 | 6 | Uji & peluncuran | ⏸ belum |
 
@@ -65,8 +66,8 @@ kunci Midtrans sandbox.
 | `/products/[slug]` | Detail produk, galeri, varian, stok, jumlah |
 | `/cart` | Keranjang tersimpan di perangkat, ringkasan, checkout |
 | `/checkout` | Langkah 1: alamat, kecamatan, catatan kurir, ringkasan |
-| `/checkout/payment` | Langkah 2: alamat, barang, total, metode, tombol bayar |
-| `/checkout/result` | Hasil pembayaran |
+| `/checkout/payment` | Langkah 2: alamat, barang, total, metode, tombol bayar/WhatsApp |
+| `/checkout/result` | Hasil pesanan: instruksi transfer + tombol WhatsApp, atau status pembayaran |
 | `/login`, `/register` | Masuk / daftar akun |
 | `/account` | Profil, ganti sandi, menu akun |
 | `/account/addresses` | Daftar alamat, tambah/ubah/hapus |
@@ -88,7 +89,7 @@ sidebar 264 px, appbar 72 px, token hijau `green-600`/`green-700`, kartu 12 px.
 | `/admin/produk/baru` | Produk baru; slug otomatis |
 | `/admin/produk/[id]` | Detail produk, varian, hingga 4 foto, hapus |
 | `/admin/zona` | Zona ongkir + kecamatan per zona |
-| `/admin/pengaturan` | Identitas toko, jam tutup pesanan, gratis ongkir |
+| `/admin/pengaturan` | Identitas toko, jam tutup, kanal pesanan, rekening transfer, gratis ongkir |
 | `/admin/pengguna` | Pengguna admin: tambah, aktif/nonaktif |
 | `/admin/laporan` | Omzet, pesanan selesai, omzet harian, lima produk terlaris |
 
@@ -159,6 +160,7 @@ src/
 │   ├── catalog.ts            # query katalog + pengaturan toko (server)
 │   ├── orders.ts             # pesanan, stok, status, dan pembayaran (server)
 │   ├── midtrans.ts           # Snap, verifikasi webhook, kedaluwarsa
+│   ├── whatsapp-order.ts     # teks + tautan pesanan WhatsApp
 │   ├── r2.ts                 # URL unggah bertanda tangan + hapus foto
 │   └── store-data.ts         # helper rupiah, fakta toko, data contoh lama
 └── middleware.ts             # penjaga rute /admin
@@ -175,8 +177,8 @@ design/                       # .pen, wireframe, dan artefak desain
 - Kode berbahasa Inggris; teks antarmuka berbahasa Indonesia.
 - Katalog toko dibaca dari database lewat `src/lib/catalog.ts`; `pnpm db:seed` mengisi kategori
   dan 11 produk contoh bila tabelnya masih kosong.
-- Pesanan, akun, alamat, dan zona checkout dibaca dari database. Pembayaran memakai Midtrans Snap
-  sandbox; webhook terverifikasi dan pesanan kedaluwarsa otomatis mengembalikan stok.
+- Pesanan, akun, alamat, dan zona checkout dibaca dari database. Pembayaran mengikuti kanal di
+  pengaturan toko: WhatsApp + transfer bank (default) atau Midtrans Snap.
 - `.env.local` tidak masuk git. Jangan pernah menaruh kunci Midtrans di repo.
 - Webhook Midtrans tidak bisa menjangkau `localhost`. Uji di preview Vercel: daftarkan
   `https://<preview>/api/webhooks/midtrans` di dashboard Midtrans, atau kirim notifikasi sendiri
@@ -189,7 +191,12 @@ design/                       # .pen, wireframe, dan artefak desain
 - `CRON_SECRET` wajib ada di environment Vercel. Rute cron menolak permintaan tanpa header
   `Authorization: Bearer <CRON_SECRET>`.
 - Nomor HP dinormalkan ke format `08…` dan disimpan unik.
+- Kanal pesanan baru diatur di `/admin/pengaturan`: `WhatsApp + transfer bank` (default) atau
+  `Midtrans`. Pesanan WhatsApp menyimpan `payment_method = "whatsapp"`, stok ditahan 12 jam, lalu
+  dibatalkan otomatis bila admin belum menandai dibayar. Pesanan Midtrans lama tetap bisa membuka
+  Snap dan webhook tetap hidup.
 - Admin memproses pesanan dari `/admin/pesanan`: `paid` → `out_for_delivery` → `completed`.
+  Pesanan WhatsApp ditandai dibayar setelah transfer masuk; pembatalan mengembalikan stok.
   Pembatalan wajib alasan dan mengembalikan stok. Pesanan `paid_late` hanya boleh dicatat
   refund, tanpa mengubah stok, karena cron kedaluwarsa sudah mengembalikannya.
 - Omzet laporan memakai waktu transisi ke `completed` di `order_status_history`, bukan waktu bayar.

@@ -250,7 +250,9 @@ export default function CheckoutForm({
             disabled={!area}
             className="btn-primary w-full"
           >
-            Lanjut ke pembayaran
+            {settings.paymentMode === "whatsapp"
+              ? "Lanjut konfirmasi pesanan"
+              : "Lanjut ke pembayaran"}
             <ArrowRight size={15} />
           </button>
         </div>

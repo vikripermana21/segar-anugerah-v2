@@ -4,12 +4,17 @@
  */
 import type { OrderStatus } from "./order-status";
 
-export type AdminOrderAction = "dispatch" | "complete" | "cancel" | "refund";
+export type AdminOrderAction = "dispatch" | "complete" | "cancel" | "refund" | "confirm";
 
 export const adminActionMeta: Record<
   AdminOrderAction,
   { label: string; next: OrderStatus; pendingLabel: string }
 > = {
+  confirm: {
+    label: "Tandai sudah dibayar",
+    next: "paid",
+    pendingLabel: "Mengonfirmasi…",
+  },
   dispatch: {
     label: "Sedang diantar",
     next: "out_for_delivery",
@@ -49,18 +54,31 @@ const allowed: Record<OrderStatus, AdminOrderAction[]> = {
  * `paid_late` lahir dari pesanan `expired`, jadi stoknya sudah kembali.
  */
 export function releasesStockOnCancel(status: OrderStatus): boolean {
-  return status === "paid" || status === "processing" || status === "out_for_delivery";
+  return (
+    status === "pending_payment" ||
+    status === "paid" ||
+    status === "processing" ||
+    status === "out_for_delivery"
+  );
 }
 
 /**
  * Refund hanya masuk akal bila uang pernah diterima. `cancelled` dari webhook
  * gagal bayar tidak punya `paidAt`, jadi tidak boleh ditandai refund.
+ * Konfirmasi dan pembatalan pesanan `pending_payment` hanya untuk kanal WhatsApp.
  */
 export function canAdminAct(
   status: OrderStatus,
   action: AdminOrderAction,
-  options: { paidAt?: Date | null } = {},
+  options: { paidAt?: Date | null; paymentMethod?: string | null } = {},
 ): boolean {
+  if (status === "pending_payment") {
+    if (options.paymentMethod !== "whatsapp") return false;
+    return action === "confirm" || action === "cancel";
+  }
+
+  if (action === "confirm") return false;
+
   if (action === "refund") {
     if (status === "paid_late") return true;
     return status === "cancelled" && Boolean(options.paidAt);

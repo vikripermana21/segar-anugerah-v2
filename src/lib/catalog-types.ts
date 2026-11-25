@@ -43,6 +43,10 @@ export type StoreSettings = {
   whatsapp: string;
   address: string;
   cutoffHour: number;
+  paymentMode: "whatsapp" | "midtrans";
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
   freeShippingActive: boolean;
   freeShippingUntil: string | null;
   freeShippingMinSubtotal: number;

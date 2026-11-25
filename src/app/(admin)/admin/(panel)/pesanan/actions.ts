@@ -22,12 +22,14 @@ const changeSchema = z.object({
     .string()
     .trim()
     .regex(/^SA-\d{6}-\d{4}$/, "Nomor pesanan tidak valid."),
-  action: z.enum(["dispatch", "complete", "cancel", "refund"]),
+  action: z.enum(["confirm", "dispatch", "complete", "cancel", "refund"]),
   reason: z.string().trim().max(300, "Alasan maksimal 300 karakter.").optional(),
 });
 
 function noteFor(action: AdminOrderAction, reason?: string): string {
   switch (action) {
+    case "confirm":
+      return "Pembayaran transfer dikonfirmasi admin lewat WhatsApp.";
     case "dispatch":
       return "Pesanan diserahkan ke kurir.";
     case "complete":
@@ -80,10 +82,17 @@ export async function changeOrderStatus(
 
       const current = row.status as OrderStatus;
 
-      if (!canAdminAct(current, action, { paidAt: row.paidAt })) {
+      if (!canAdminAct(current, action, {
+        paidAt: row.paidAt,
+        paymentMethod: row.paymentMethod,
+      })) {
         return {
           error: `Pesanan berstatus ${orderStatusMeta[current]?.label ?? current} tidak bisa diubah menjadi ${adminActionMeta[action].label.toLowerCase()}.`,
         };
+      }
+
+      if (action === "confirm" && row.expiresAt.getTime() <= Date.now()) {
+        return { error: "Batas konfirmasi 12 jam sudah lewat. Pesanan akan dibatalkan otomatis." };
       }
 
       const next = adminActionMeta[action].next;
@@ -93,6 +102,7 @@ export async function changeOrderStatus(
         .update(order)
         .set({
           status: next,
+          paidAt: action === "confirm" ? row.paidAt ?? now : row.paidAt,
           cancelledReason: action === "cancel" ? reason : row.cancelledReason,
           updatedAt: now,
         })

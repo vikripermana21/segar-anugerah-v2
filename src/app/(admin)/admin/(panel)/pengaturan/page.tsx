@@ -118,15 +118,17 @@ export default async function AdminSettingsPage() {
                 </label>
 
                 <label className="admin-label">
-                  Masa berlaku pembayaran
+                  Masa berlaku pesanan
                   <input
-                    value="30 menit"
+                    value={settings.paymentMode === "whatsapp" ? "12 jam" : "30 menit"}
                     readOnly
-                    aria-label="Masa berlaku pembayaran"
+                    aria-label="Masa berlaku pesanan"
                     className={`${inputClass} bg-bg text-ink-3`}
                   />
                   <span className="admin-help">
-                    Ditetapkan sistem dan disamakan dengan Midtrans.
+                    {settings.paymentMode === "whatsapp"
+                      ? "Pesanan WhatsApp dibatalkan otomatis dan stok kembali setelah 12 jam tanpa konfirmasi."
+                      : "Masa bayar Midtrans. Ditetapkan sistem dan disamakan dengan Midtrans."}
                   </span>
                 </label>
               </div>
@@ -140,6 +142,88 @@ export default async function AdminSettingsPage() {
         </div>
 
         <div className="flex flex-col gap-4">
+          <Card>
+            <CardHead
+              title="Cara pesan"
+              note="Berlaku untuk pesanan baru; pesanan lama tetap di kanalnya"
+            />
+            <CardBody>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="sr-only">Kanal pesanan baru</legend>
+
+                {[
+                  {
+                    value: "whatsapp",
+                    title: "WhatsApp + transfer bank",
+                    note: "Pembeli membuat pesanan, lalu mengirim ringkasannya ke WhatsApp toko. Stok ditahan 12 jam.",
+                  },
+                  {
+                    value: "midtrans",
+                    title: "Midtrans (online)",
+                    note: "Pembeli membayar lewat Snap. Stok ditahan 30 menit.",
+                  },
+                ].map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex cursor-pointer gap-3 rounded-[10px] border border-line px-3.5 py-3 hover:bg-bg"
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMode"
+                      value={option.value}
+                      defaultChecked={settings.paymentMode === option.value}
+                      className="mt-0.5 accent-green-600"
+                    />
+                    <span>
+                      <span className="block text-[12.5px] font-semibold text-ink">
+                        {option.title}
+                      </span>
+                      <span className="mt-0.5 block text-[10.5px] leading-relaxed text-ink-3">
+                        {option.note}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+
+              <div className="mt-4 grid gap-3 border-t border-line-soft pt-4">
+                <p className="text-[11px] font-semibold text-ink">Rekening transfer</p>
+                <label className="admin-label">
+                  Nama bank
+                  <input
+                    name="bankName"
+                    defaultValue={settings.bankName ?? ""}
+                    placeholder="BCA"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="admin-label">
+                  Nomor rekening
+                  <input
+                    name="bankAccountNumber"
+                    defaultValue={settings.bankAccountNumber ?? ""}
+                    inputMode="numeric"
+                    placeholder="1234567890"
+                    className={inputClass}
+                  />
+                </label>
+                <label className="admin-label">
+                  Atas nama
+                  <input
+                    name="bankAccountName"
+                    defaultValue={settings.bankAccountName ?? ""}
+                    placeholder="Nama pemilik rekening"
+                    className={inputClass}
+                  />
+                </label>
+                <p className="text-[10.5px] leading-relaxed text-ink-3">
+                  Dipakai di halaman hasil pesanan dan pesan WhatsApp. Kosongkan bila detail
+                  transfer dikirim manual lewat chat.
+                </p>
+              </div>
+            </CardBody>
+          </Card>
+
           <Card>
             <CardHead
               title="Gratis ongkir"

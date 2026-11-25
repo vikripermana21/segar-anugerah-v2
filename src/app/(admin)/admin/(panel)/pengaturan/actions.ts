@@ -20,6 +20,10 @@ const schema = z.object({
     .int()
     .min(0, "Minimal belanja tidak boleh negatif."),
   orderCutoffHour: z.coerce.number().int().min(0).max(23),
+  paymentMode: z.enum(["whatsapp", "midtrans"]),
+  bankName: z.string().trim().max(60).optional(),
+  bankAccountNumber: z.string().trim().max(40).optional(),
+  bankAccountName: z.string().trim().max(80).optional(),
 });
 
 export async function updateSettings(_state: ActionState, formData: FormData): Promise<ActionState> {
@@ -35,6 +39,10 @@ export async function updateSettings(_state: ActionState, formData: FormData): P
     freeShippingUntil: rawUntil || undefined,
     freeShippingMinSubtotal: formData.get("freeShippingMinSubtotal") || 0,
     orderCutoffHour: formData.get("orderCutoffHour") || 16,
+    paymentMode: formData.get("paymentMode") || "whatsapp",
+    bankName: formData.get("bankName") || undefined,
+    bankAccountNumber: formData.get("bankAccountNumber") || undefined,
+    bankAccountName: formData.get("bankAccountName") || undefined,
   });
 
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -58,6 +66,10 @@ export async function updateSettings(_state: ActionState, formData: FormData): P
         freeShippingUntil: until,
         freeShippingMinSubtotal: parsed.data.freeShippingMinSubtotal,
         orderCutoffHour: parsed.data.orderCutoffHour,
+        paymentMode: parsed.data.paymentMode,
+        bankName: parsed.data.bankName ?? null,
+        bankAccountNumber: parsed.data.bankAccountNumber ?? null,
+        bankAccountName: parsed.data.bankAccountName ?? null,
         updatedAt: new Date(),
       })
       .where(eq(storeSetting.id, 1));

@@ -4,25 +4,37 @@ import { notFound, redirect } from "next/navigation";
 import { Check, Clock, Info, Phone, X } from "lucide-react";
 
 import { requireCustomer } from "@/lib/customer-guard";
+import { getStoreSettings } from "@/lib/catalog";
 import { getCustomerOrder } from "@/lib/order-view";
 import { orderStatusMeta, type OrderStatus } from "@/lib/order-status";
 import { rupiah } from "@/lib/store-data";
+import { bankLines, whatsappOrderUrl } from "@/lib/whatsapp-order";
 
 import { PageBar } from "../../_components/app-bar";
 
 export const metadata: Metadata = {
-  title: "Pembayaran",
+  title: "Hasil pesanan",
 };
 
 type SearchParams = Promise<{ order?: string; order_id?: string }>;
 
 const successStatuses: OrderStatus[] = ["paid", "processing", "out_for_delivery", "completed"];
 
-function headline(status: OrderStatus): {
+function headline(
+  status: OrderStatus,
+  whatsappPending: boolean,
+): {
   title: string;
   body: string;
   tone: "success" | "waiting" | "failed";
 } {
+  if (whatsappPending) {
+    return {
+      title: "Pesanan sudah dibuat",
+      body: "Kirim ringkasan pesanan ke WhatsApp toko. Stok ditahan 12 jam sampai transfer dikonfirmasi.",
+      tone: "waiting",
+    };
+  }
   if (successStatuses.includes(status)) {
     return {
       title: "Pembayaran berhasil",
@@ -68,12 +80,23 @@ export default async function PaymentResultPage({
   const order = await getCustomerOrder(session.id, orderNumber);
   if (!order) notFound();
 
-  const info = headline(order.status);
+  const settings = await getStoreSettings();
+  const whatsappPending =
+    order.status === "pending_payment" && order.paymentMethod === "whatsapp";
+  const waUrl = whatsappPending ? whatsappOrderUrl(order, settings) : null;
+
+  const info = headline(order.status, whatsappPending);
   const paid = successStatuses.includes(order.status);
+  const bank = bankLines(settings);
 
   return (
     <div className="min-h-dvh">
-      <PageBar title="Pembayaran" backHref="/account/orders" backLabel="Tutup" close />
+      <PageBar
+        title={whatsappPending ? "Konfirmasi" : "Pembayaran"}
+        backHref="/account/orders"
+        backLabel="Tutup"
+        close
+      />
 
       <main className="page pb-10 pt-2">
         <div className="mx-auto max-w-[520px]">
@@ -99,13 +122,45 @@ export default async function PaymentResultPage({
             <p className="max-w-[38ch] text-[11.5px] leading-[1.5] text-ink-2">{info.body}</p>
           </section>
 
+          {whatsappPending ? (
+            <section className="mt-3 rounded-2xl border border-border bg-surface p-4">
+              <h2 className="text-[12.5px] font-bold">Transfer bank</h2>
+              {bank.length > 0 ? (
+                <div className="mt-2">
+                  {bank.map((line) => (
+                    <p key={line} className="text-[12.5px] font-semibold">
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1.5 text-[11px] leading-[1.45] text-ink-3">
+                  Detail rekening dikirim toko lewat WhatsApp.
+                </p>
+              )}
+              <p className="mt-2 text-[10.5px] leading-[1.45] text-ink-3">
+                Kirim bukti transfer di chat WhatsApp. Pesanan dibatalkan otomatis setelah 12 jam
+                tanpa konfirmasi.
+              </p>
+            </section>
+          ) : null}
+
           <section className="mt-4 rounded-2xl border border-border bg-surface p-4">
             <dl className="space-y-2.5">
               {[
                 ["Nomor pesanan", order.number],
                 [paid ? "Total dibayar" : "Total pesanan", rupiah(order.total)],
-                ["Metode", order.paymentMethod ?? "—"],
-                [paid ? "Dibayar" : "Status", order.paidLabel ?? orderStatusMeta[order.status].label],
+                [
+                  "Metode",
+                  order.paymentMethod === "whatsapp" ? "Transfer bank" : (order.paymentMethod ?? "—"),
+                ],
+                [
+                  paid ? "Dibayar" : "Status",
+                  order.paidLabel ??
+                    (whatsappPending
+                      ? "Menunggu konfirmasi"
+                      : orderStatusMeta[order.status].label),
+                ],
                 ["Dikirim", order.deliveryDateLabel],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between gap-3 text-[12px]">
@@ -122,7 +177,22 @@ export default async function PaymentResultPage({
             </dl>
           </section>
 
-          {order.status === "pending_payment" ? (
+          {whatsappPending ? (
+            waUrl ? (
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary mt-4 w-full"
+              >
+                Buka WhatsApp toko
+              </a>
+            ) : (
+              <p className="mt-4 rounded-xl border border-border bg-surface px-3 py-3 text-center text-[11px] text-ink-2">
+                Nomor WhatsApp toko belum diatur. Hubungi admin lewat nomor bantuan.
+              </p>
+            )
+          ) : order.status === "pending_payment" ? (
             <Link href={`/checkout/payment?order=${order.number}`} className="btn-primary mt-4 w-full">
               Lanjutkan pembayaran
             </Link>
@@ -132,17 +202,24 @@ export default async function PaymentResultPage({
             </Link>
           )}
 
-          <Link href="/account/orders" className="btn-secondary mt-2.5 w-full">
-            Semua pesanan
-          </Link>
+          {whatsappPending ? (
+            <Link href={`/account/orders/${order.number}`} className="btn-secondary mt-2.5 w-full">
+              Lihat pesanan
+            </Link>
+          ) : (
+            <Link href="/account/orders" className="btn-secondary mt-2.5 w-full">
+              Semua pesanan
+            </Link>
+          )}
 
           <div className="mt-4 flex gap-2.5 rounded-[14px] bg-surface-2 px-3 py-3">
             <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full bg-white/70 text-ink-2">
               <Info size={14} />
             </span>
             <p className="text-[10.5px] leading-[1.45] text-ink-2">
-              Pesanan baru dianggap dibayar setelah Midtrans mengirim konfirmasi. Kalau status
-              belum berubah, muat ulang halaman ini beberapa saat lagi.
+              {whatsappPending
+                ? "Pesanan dianggap dibayar setelah admin mengonfirmasi transfer. Stok ditahan sampai konfirmasi atau 12 jam."
+                : "Pesanan baru dianggap dibayar setelah Midtrans mengirim konfirmasi. Kalau status belum berubah, muat ulang halaman ini beberapa saat lagi."}
             </p>
           </div>
 

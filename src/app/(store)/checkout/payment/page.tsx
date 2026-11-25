@@ -34,6 +34,9 @@ export default async function PaymentPage({ searchParams }: { searchParams: Sear
     const order = await getCustomerOrder(session.id, params.order);
     if (!order) notFound();
     if (order.status !== "pending_payment") redirect(`/account/orders/${order.number}`);
+    if (order.paymentMethod === "whatsapp") {
+      redirect(`/checkout/result?order=${encodeURIComponent(order.number)}`);
+    }
     element = <PaymentView order={order} />;
   } else {
     const [address, area]: [AddressRow | null, DeliveryArea | null] = await Promise.all([
