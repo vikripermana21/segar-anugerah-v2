@@ -177,15 +177,21 @@ export default async function PaymentResultPage({
             </dl>
           </section>
 
-          {whatsappPending && waUrl ? (
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary mt-4 w-full"
-            >
-              Buka WhatsApp toko
-            </a>
+          {whatsappPending ? (
+            waUrl ? (
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary mt-4 w-full"
+              >
+                Buka WhatsApp toko
+              </a>
+            ) : (
+              <p className="mt-4 rounded-xl border border-border bg-surface px-3 py-3 text-center text-[11px] text-ink-2">
+                Nomor WhatsApp toko belum diatur. Hubungi admin lewat nomor bantuan.
+              </p>
+            )
           ) : order.status === "pending_payment" ? (
             <Link href={`/checkout/payment?order=${order.number}`} className="btn-primary mt-4 w-full">
               Lanjutkan pembayaran

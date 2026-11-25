@@ -262,19 +262,21 @@ export default async function OrderDetailPage({
         </div>
       </main>
 
-      {whatsappPending && waUrl ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface">
-          <div className="page py-3 pb-[calc(18px+env(safe-area-inset-bottom))]">
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary w-full"
-            >
-              Buka WhatsApp toko
-            </a>
+      {whatsappPending ? (
+        waUrl ? (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface">
+            <div className="page py-3 pb-[calc(18px+env(safe-area-inset-bottom))]">
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary w-full"
+              >
+                Buka WhatsApp toko
+              </a>
+            </div>
           </div>
-        </div>
+        ) : null
       ) : pending ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface">
           <div className="page py-3 pb-[calc(18px+env(safe-area-inset-bottom))]">
