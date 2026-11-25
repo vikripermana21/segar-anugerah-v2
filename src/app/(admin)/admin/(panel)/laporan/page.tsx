@@ -89,7 +89,7 @@ export default async function AdminReportPage({
         />
       </section>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
         <Card className="min-w-0">
           <CardHead
             title="Omzet per hari"

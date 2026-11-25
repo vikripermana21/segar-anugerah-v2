@@ -80,7 +80,6 @@ export default async function AdminUsersPage() {
                 <thead>
                   <tr>
                     <th>Nama</th>
-                    <th>Nomor</th>
                     <th>Terakhir masuk</th>
                     <th>Status</th>
                     <th aria-label="Aksi" />
@@ -97,8 +96,8 @@ export default async function AdminUsersPage() {
                             <span className="font-medium text-ink">{row.name}</span>
                             {isSelf ? <Badge tone="muted">Anda</Badge> : null}
                           </span>
+                          <span className="admin-muted block">{row.phone}</span>
                         </td>
-                        <td className="whitespace-nowrap">{row.phone}</td>
                         <td className="whitespace-nowrap text-[11.5px] text-ink-3">
                           {lastLoginLabel(row.lastLoginAt)}
                         </td>

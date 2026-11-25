@@ -197,7 +197,12 @@ export default async function AdminDashboardPage() {
                 >
                   <div
                     className="w-full rounded-[4px] bg-green-600"
-                    style={{ height: `${Math.max(4, (day.revenue / maxWeekRevenue) * 100)}%` }}
+                    style={{
+                      height:
+                        day.revenue > 0
+                          ? `${Math.max(4, (day.revenue / maxWeekRevenue) * 100)}%`
+                          : 0,
+                    }}
                   />
                 </div>
                 <span className="text-[10px] text-ink-3">{day.label}</span>

@@ -14,7 +14,7 @@ dunia visual. Sumber visual toko: [`design/segar-anugerah-client.pen`](design/se
 | 2 | Katalog & admin katalog | ✅ admin katalog + toko membaca katalog database |
 | 3 | Akun pembeli & keranjang | ✅ akun, alamat, checkout zona DB; keranjang tetap di perangkat |
 | 4 | Midtrans & pesanan | ✅ pesanan, kunci stok, Snap sandbox, webhook, kedaluwarsa |
-| 5 | Dashboard pesanan & laporan | ⏸ belum |
+| 5 | Dashboard pesanan & laporan | ✅ pesanan, pengguna admin, omzet, produk terlaris |
 | 6 | Uji & peluncuran | ⏸ belum |
 
 ## Menjalankan
@@ -77,17 +77,20 @@ kunci Midtrans sandbox.
 
 Visual admin mengikuti [`design/segar-anugerah-cms.pen`](design/segar-anugerah-cms.pen):
 sidebar 264 px, appbar 72 px, token hijau `green-600`/`green-700`, kartu 12 px.
-Halaman pesanan, pengguna admin, dan laporan belum dibuat.
 
 | Rute | Isi |
 |---|---|
-| `/admin` | Dashboard: hitungan katalog, pintasan |
+| `/admin` | Dashboard: pesanan perlu disiapkan, omzet hari ini, stok menipis |
+| `/admin/pesanan` | Daftar pesanan: filter status, cari nomor/nama/HP, paginasi |
+| `/admin/pesanan/[orderNumber]` | Detail pesanan, ubah status, batal, catat refund |
 | `/admin/kategori` | Kategori: tambah, ubah, aktif/nonaktif, hapus bila kosong |
 | `/admin/produk` | Daftar produk: cari, filter kategori, aktif/nonaktif |
 | `/admin/produk/baru` | Produk baru; slug otomatis |
 | `/admin/produk/[id]` | Detail produk, varian, hingga 4 foto, hapus |
 | `/admin/zona` | Zona ongkir + kecamatan per zona |
 | `/admin/pengaturan` | Identitas toko, jam tutup pesanan, gratis ongkir |
+| `/admin/pengguna` | Pengguna admin: tambah, aktif/nonaktif |
+| `/admin/laporan` | Omzet, pesanan selesai, omzet harian, lima produk terlaris |
 
 ## Perintah
 
@@ -186,3 +189,10 @@ design/                       # .pen, wireframe, dan artefak desain
 - `CRON_SECRET` wajib ada di environment Vercel. Rute cron menolak permintaan tanpa header
   `Authorization: Bearer <CRON_SECRET>`.
 - Nomor HP dinormalkan ke format `08…` dan disimpan unik.
+- Admin memproses pesanan dari `/admin/pesanan`: `paid` → `out_for_delivery` → `completed`.
+  Pembatalan wajib alasan dan mengembalikan stok. Pesanan `paid_late` hanya boleh dicatat
+  refund, tanpa mengubah stok, karena cron kedaluwarsa sudah mengembalikannya.
+- Omzet laporan memakai waktu transisi ke `completed` di `order_status_history`, bukan waktu bayar.
+  Pesanan batal, kedaluwarsa, dan refund tidak dihitung.
+- Menonaktifkan admin menghapus semua sesinya. Admin terakhir dan akun sendiri tidak bisa
+  dinonaktifkan.

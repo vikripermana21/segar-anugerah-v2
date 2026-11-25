@@ -138,7 +138,7 @@ export default async function AdminOrderListPage({
           </div>
         ) : (
           <div className="admin-table-wrap">
-            <table className="admin-table">
+            <table className="admin-table min-w-[760px]">
               <thead>
                 <tr>
                   <th>Nomor</th>
@@ -153,7 +153,7 @@ export default async function AdminOrderListPage({
               <tbody>
                 {result.orders.map((order) => (
                   <tr key={order.id}>
-                    <td>
+                    <td className="whitespace-nowrap">
                       <Link
                         href={`/admin/pesanan/${order.number}`}
                         className="admin-name hover:text-green-700"
