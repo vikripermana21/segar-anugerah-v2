@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { product, productImage, productVariant } from "@/db/schema";
 import { pgMessage, type ActionState } from "@/lib/action-state";
 import { requireAdmin } from "@/lib/admin-guard";
+import { deleteR2Object, r2KeyFromUrl } from "@/lib/r2";
 import { slugify, uniqueSlug } from "@/lib/slug";
 
 const productSchema = z.object({
@@ -137,7 +138,17 @@ export async function deleteProduct(formData: FormData): Promise<void> {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
+  const images = await db
+    .select({ url: productImage.url })
+    .from(productImage)
+    .where(eq(productImage.productId, id));
+
   await db.delete(product).where(eq(product.id, id));
+
+  for (const image of images) {
+    const key = r2KeyFromUrl(image.url);
+    if (key) await deleteR2Object(key);
+  }
 
   refreshProduct();
   redirect("/admin/produk");
@@ -233,9 +244,12 @@ export async function addImage(_state: ActionState, formData: FormData): Promise
   if (!productId) return { error: "Produk tidak dikenal." };
 
   const url = String(formData.get("url") ?? "").trim();
-  const alt = String(formData.get("alt") ?? "").trim();
+  const alt = String(formData.get("alt") ?? "").trim().slice(0, 160);
 
-  if (!url) return { error: "URL gambar wajib diisi." };
+  if (!url) return { error: "Berkas foto wajib diunggah." };
+  if (url.length > 600 || (!url.startsWith("/") && !url.startsWith("https://"))) {
+    return { error: "URL foto tidak valid." };
+  }
 
   const existing = await db
     .select({ id: productImage.id })
@@ -288,6 +302,11 @@ export async function deleteImage(formData: FormData): Promise<void> {
   const target = rows.find((row) => row.id === id);
 
   await db.delete(productImage).where(eq(productImage.id, id));
+
+  if (target) {
+    const key = r2KeyFromUrl(target.url);
+    if (key) await deleteR2Object(key);
+  }
 
   if (target?.isPrimary) {
     const next = await db
