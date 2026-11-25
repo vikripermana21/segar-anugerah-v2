@@ -2,12 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Settings, Tags, Truck } from "lucide-react";
+import {
+  BarChart3,
+  ClipboardList,
+  LayoutDashboard,
+  Package,
+  Settings,
+  Tags,
+  Truck,
+  Users,
+} from "lucide-react";
 
 const groups = [
   {
     label: null,
     items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Pesanan",
+    items: [{ href: "/admin/pesanan", label: "Daftar pesanan", icon: ClipboardList }],
   },
   {
     label: "Katalog",
@@ -22,7 +35,11 @@ const groups = [
   },
   {
     label: "Toko",
-    items: [{ href: "/admin/pengaturan", label: "Pengaturan", icon: Settings }],
+    items: [
+      { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
+      { href: "/admin/pengguna", label: "Pengguna admin", icon: Users },
+      { href: "/admin/laporan", label: "Laporan", icon: BarChart3 },
+    ],
   },
 ];
 

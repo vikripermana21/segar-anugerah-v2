@@ -825,7 +825,7 @@ situs yang sudah aktif.
 
 - [ ] Tarif ongkir per zona berapa saja? **Ditunda ke Fase 2** atas keputusan pemilik (19 Nov); zona dibuat dengan tarif sementara yang bisa diubah kapan saja.
 - [ ] Apakah ada jam tutup toko di luar pukul 16.00? (sebelum Fase 3)
-- [ ] Apakah pesanan yang sudah `paid` boleh diubah isinya oleh admin? (sebelum Fase 5)
+- [x] Apakah pesanan yang sudah `paid` boleh diubah isinya oleh admin? **Tidak** (25 Nov). Perubahan isi mengubah total dan nominal Midtrans; jalur resmi adalah batalkan lalu buat pesanan baru.
 - [ ] Apakah pembeli boleh memakai satu nomor untuk beberapa alamat restoran? (sebelum Fase 3)
 - [ ] Nama dan ketentuan `/intent` untuk wireframe — perlu dicatat agar PRD tidak bertentangan
 - [ ] Apakah perlu faktur/surat jalan untuk pelanggan restoran? (setelah peluncuran)

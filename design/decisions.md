@@ -180,3 +180,21 @@
 - Rejected: mempertahankan dunia buku kas (Archivo + Courier, sudut 0 px, garis mistar) yang sudah dibangun di beranda
 - Rests on: design/segar-anugerah-client.pen, DESIGN.md, src/app/(store)/*
 
+
+## 2026-11-25 · Isi pesanan `paid` tidak bisa diubah admin
+- Decided by: pemilik
+- Why: perubahan isi mengubah total dan nominal Midtrans; pembatalan lalu pesanan baru adalah jalur yang bisa diaudit
+- Rejected: mode ubah isi pesanan di layar detail admin
+- Rests on: docs/PRD.md §9.2, design/wireframes-admin-open-questions.md
+
+## 2026-11-25 · Pembatalan admin mencakup `paid`, `out_for_delivery`, dan `paid_late`
+- Decided by: pemilik (mengikuti rekomendasi)
+- Why: barang bisa batal sebelum selesai; `paid_late` perlu jalur refund tanpa menyentuh stok karena cron kedaluwarsa sudah mengembalikannya
+- Rejected: membatasi pembatalan hanya pada `paid`
+- Rests on: docs/PRD.md §2.1 Alur B, §2.2 5.3
+
+## 2026-11-25 · Omzet laporan memakai waktu transisi ke `completed`
+- Decided by: pemilik
+- Why: pesanan dihitung sebagai penjualan saat selesai, bukan saat dibayar; `order_status_history` menyimpan waktu itu
+- Rejected: memakai `orders.paid_at` atau `orders.updated_at`
+- Rests on: docs/PRD.md §2.2 5.6
