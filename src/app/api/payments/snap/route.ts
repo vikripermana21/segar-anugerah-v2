@@ -47,6 +47,16 @@ export async function POST(request: Request) {
     );
   }
 
+  if (row.paymentMethod === "whatsapp") {
+    return Response.json(
+      {
+        ok: false,
+        message: "Pesanan ini dikonfirmasi lewat WhatsApp, bukan pembayaran online.",
+      },
+      { status: 409 },
+    );
+  }
+
   const remainingMinutes = Math.ceil((row.expiresAt.getTime() - Date.now()) / 60000);
   if (remainingMinutes <= 0) {
     return Response.json(

@@ -31,9 +31,16 @@ async function expireOrders(now: Date): Promise<{ checked: number; expired: numb
       const row = locked[0];
       if (!row || row.status !== "pending_payment" || row.expiresAt > now) return false;
 
+      const whatsapp = row.paymentMethod === "whatsapp";
+      const nextStatus = whatsapp ? "cancelled" : "expired";
+
       await tx
         .update(order)
-        .set({ status: "expired", updatedAt: now })
+        .set({
+          status: nextStatus,
+          cancelledReason: whatsapp ? "Tidak dikonfirmasi dalam 12 jam." : row.cancelledReason,
+          updatedAt: now,
+        })
         .where(eq(order.id, row.id));
 
       await restoreOrderStock(tx, row.id, now);
@@ -41,9 +48,11 @@ async function expireOrders(now: Date): Promise<{ checked: number; expired: numb
       await tx.insert(orderStatusHistory).values({
         orderId: row.id,
         fromStatus: "pending_payment",
-        toStatus: "expired",
+        toStatus: nextStatus,
         changedBy: "system:cron",
-        note: "Batas pembayaran lewat, stok dikembalikan.",
+        note: whatsapp
+          ? "Tidak dikonfirmasi dalam 12 jam, pesanan dibatalkan dan stok dikembalikan."
+          : "Batas pembayaran lewat, stok dikembalikan.",
       });
 
       return true;

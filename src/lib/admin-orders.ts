@@ -356,7 +356,7 @@ export async function getAdminOrder(orderNumber: string): Promise<AdminOrderDeta
       : Promise.resolve([] as { name: string }[]),
   ]);
 
-  const options = { paidAt: row.paidAt };
+  const options = { paidAt: row.paidAt, paymentMethod: row.paymentMethod };
 
   return {
     id: row.id,
@@ -408,6 +408,7 @@ export async function getAdminOrder(orderNumber: string): Promise<AdminOrderDeta
       createdLabel: adminDateTimeLabel(event.createdAt),
     })),
     actions: {
+      confirm: canAdminAct(status, "confirm", options),
       dispatch: canAdminAct(status, "dispatch", options),
       complete: canAdminAct(status, "complete", options),
       cancel: canAdminAct(status, "cancel", options),
