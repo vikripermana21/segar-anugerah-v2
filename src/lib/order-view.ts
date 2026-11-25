@@ -18,6 +18,7 @@ export type OrderPage = {
 export type OrderSummary = {
   number: string;
   status: OrderStatus;
+  paymentMethod: string | null;
   createdLabel: string;
   dateLabel: string;
   itemCount: number;
@@ -126,6 +127,7 @@ export async function listCustomerOrders(
       status: order.status,
       createdAt: order.createdAt,
       total: order.total,
+      paymentMethod: order.paymentMethod,
       itemCount: sql<number>`(select count(*) from ${orderItem} where ${orderItem.orderId} = ${order.id})`,
     })
     .from(order)
@@ -140,6 +142,7 @@ export async function listCustomerOrders(
     orders: page.map((row) => ({
       number: row.number,
       status: row.status as OrderStatus,
+      paymentMethod: row.paymentMethod,
       createdLabel: dateTimeLabel(row.createdAt),
       dateLabel: dateOnly.format(row.createdAt),
       itemCount: Number(row.itemCount),
@@ -181,6 +184,7 @@ export async function getCustomerOrder(
   return {
     number: row.orderNumber,
     status,
+    paymentMethod: row.paymentMethod,
     createdLabel: dateTimeLabel(row.createdAt),
     dateLabel: dateOnly.format(row.createdAt),
     itemCount: items.length,
@@ -189,8 +193,7 @@ export async function getCustomerOrder(
     shippingFee: row.shippingFee,
     shippingDiscount: row.shippingDiscount,
     deliveryDateLabel: deliveryLabel(row.deliveryDate),
-    expiresLabel: pending ? `${clock.format(row.expiresAt)} WIB` : null,
-    paymentMethod: row.paymentMethod,
+    expiresLabel: pending ? dateTimeLabel(row.expiresAt) : null,
     paidLabel: row.paidAt ? dateTimeLabel(row.paidAt) : null,
     note: row.notes,
     address: row.addressSnapshot as AddressSnapshot,

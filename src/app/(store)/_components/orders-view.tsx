@@ -14,9 +14,30 @@ import type { OrderPage, OrderSummary } from "@/lib/order-view";
 import TabBar from "./tab-bar";
 import { EmptyState } from "./ui";
 
-export function OrderStatusPill({ status }: { status: OrderStatus }) {
+export function OrderStatusPill({
+  status,
+  paymentMethod,
+}: {
+  status: OrderStatus;
+  paymentMethod?: string | null;
+}) {
   const meta = orderStatusMeta[status];
-  return <span className={`pill ${meta.tone}`}>{meta.label}</span>;
+  const label =
+    status === "pending_payment" && paymentMethod === "whatsapp"
+      ? "Menunggu konfirmasi"
+      : meta.label;
+  return <span className={`pill ${meta.tone}`}>{label}</span>;
+}
+
+function whatsappPending(order: OrderSummary): boolean {
+  return order.status === "pending_payment" && order.paymentMethod === "whatsapp";
+}
+
+function statusNote(order: OrderSummary): string {
+  if (whatsappPending(order)) {
+    return "Toko akan mengonfirmasi transfer lewat WhatsApp.";
+  }
+  return orderStatusMeta[order.status].note;
 }
 
 async function fetchPage(status: string, cursor: string | null): Promise<OrderPage> {
@@ -114,7 +135,10 @@ export default function OrdersView({
                 >
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-[12.5px] font-bold">{order.number}</h2>
-                    <OrderStatusPill status={order.status} />
+                    <OrderStatusPill
+                      status={order.status}
+                      paymentMethod={order.paymentMethod}
+                    />
                   </div>
                   <p className="mt-1 text-[10.5px] text-ink-3">
                     {order.dateLabel} · {order.itemCount} barang
@@ -130,7 +154,7 @@ export default function OrdersView({
                     {order.status === "pending_payment" ? (
                       <Clock size={13} className="mt-0.5 shrink-0" />
                     ) : null}
-                    {orderStatusMeta[order.status].note}
+                    {statusNote(order)}
                   </p>
 
                   <div className="my-2.5 h-px bg-border" />
@@ -141,12 +165,19 @@ export default function OrdersView({
                       <p className="tabular text-[13px] font-bold">{rupiah(order.total)}</p>
                     </div>
 
-                    {order.status === "pending_payment" ? (
+                    {order.status === "pending_payment" && !whatsappPending(order) ? (
                       <Link
                         href={`/account/orders/${order.number}`}
                         className="inline-flex h-[34px] min-w-[96px] items-center justify-center rounded-[9px] bg-brand px-3 text-[13.5px] font-bold text-cream"
                       >
                         Bayar
+                      </Link>
+                    ) : whatsappPending(order) ? (
+                      <Link
+                        href={`/account/orders/${order.number}`}
+                        className="inline-flex h-[34px] min-w-[96px] items-center justify-center rounded-[9px] bg-brand px-3 text-[13.5px] font-bold text-cream"
+                      >
+                        Lihat
                       </Link>
                     ) : (
                       <Link
