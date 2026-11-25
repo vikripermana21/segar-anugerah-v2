@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { asc, count, eq, lte } from "drizzle-orm";
-import { ClipboardList, Package, ShoppingBasket, TriangleAlert, Wallet } from "lucide-react";
+import { ClipboardList, MessageCircle, Package, TriangleAlert, Wallet } from "lucide-react";
 
 import { db } from "@/db";
 import { product, productVariant } from "@/db/schema";
 import { requireAdmin } from "@/lib/admin-guard";
-import { countOrdersByStatus, listOrdersToPrepare } from "@/lib/admin-orders";
+import {
+  countOrdersByStatus,
+  countWhatsAppPending,
+  listOrdersToPrepare,
+} from "@/lib/admin-orders";
 import { recentReportRange, revenueReport, todaySummary } from "@/lib/admin-reports";
 import { rupiah } from "@/lib/store-data";
 
@@ -18,11 +22,12 @@ export default async function AdminDashboardPage() {
   const weekRange = recentReportRange(7);
   const weekPromise = revenueReport({ from: weekRange.fromKey, to: weekRange.toKey });
 
-  const [counts, summary, toPrepare, [activeProductCount], lowStock, weekReport] =
+  const [counts, summary, toPrepare, confirmCount, [activeProductCount], lowStock, weekReport] =
     await Promise.all([
       countOrdersByStatus(),
       todaySummary(),
       listOrdersToPrepare(5),
+      countWhatsAppPending(),
       db.select({ value: count() }).from(product).where(eq(product.isActive, true)),
       db
         .select({
@@ -76,10 +81,10 @@ export default async function AdminDashboardPage() {
           icon={<Wallet size={15} strokeWidth={2} />}
         />
         <StatCard
-          label="Pesanan hari ini"
-          value={String(summary.ordersToday)}
-          note={`${summary.pendingPayment} menunggu pembayaran`}
-          icon={<ShoppingBasket size={15} strokeWidth={2} />}
+          label="Perlu dikonfirmasi"
+          value={String(confirmCount)}
+          note={`${summary.ordersToday} pesanan masuk hari ini`}
+          icon={<MessageCircle size={15} strokeWidth={2} />}
         />
       </section>
 

@@ -36,7 +36,7 @@ export type AdminOrderFilter = {
 
 export const adminOrderFilters: AdminOrderFilter[] = [
   { key: "semua", label: "Semua" },
-  { key: "belum-bayar", label: "Belum dibayar", statuses: ["pending_payment"] },
+  { key: "belum-bayar", label: "Menunggu konfirmasi", statuses: ["pending_payment"] },
   { key: "perlu-disiapkan", label: "Perlu disiapkan", statuses: ["paid", "processing"] },
   { key: "perlu-ditinjau", label: "Perlu ditinjau", statuses: ["paid_late"] },
   { key: "dikirim", label: "Dikirim", statuses: ["out_for_delivery"] },
@@ -48,11 +48,22 @@ export function findAdminOrderFilter(key: string | undefined): AdminOrderFilter 
   return adminOrderFilters.find((item) => item.key === key) ?? adminOrderFilters[0];
 }
 
+export function adminStatusLabel(
+  status: OrderStatus,
+  paymentMethod: string | null,
+): string {
+  if (status === "pending_payment" && paymentMethod === "whatsapp") {
+    return "Menunggu konfirmasi";
+  }
+  return orderStatusMeta[status]?.label ?? status;
+}
+
 export type AdminOrderRow = {
   id: string;
   number: string;
   status: OrderStatus;
   statusLabel: string;
+  paymentMethod: string | null;
   customerName: string;
   customerPhone: string;
   createdAtLabel: string;
@@ -158,6 +169,7 @@ export async function listAdminOrders(input: {
         status: order.status,
         createdAt: order.createdAt,
         total: order.total,
+        paymentMethod: order.paymentMethod,
         customerName: customer.name,
         customerPhone: customer.phone,
         itemCount: sql<number>`(select count(*) from ${orderItem} where ${orderItem.orderId} = ${order.id})`,
@@ -182,7 +194,8 @@ export async function listAdminOrders(input: {
       id: row.id,
       number: row.number,
       status: row.status as OrderStatus,
-      statusLabel: orderStatusMeta[row.status as OrderStatus]?.label ?? row.status,
+      statusLabel: adminStatusLabel(row.status as OrderStatus, row.paymentMethod),
+      paymentMethod: row.paymentMethod,
       customerName: row.customerName,
       customerPhone: row.customerPhone,
       createdAtLabel: adminDateTimeLabel(row.createdAt),
@@ -210,6 +223,16 @@ export async function countOrdersByStatus(): Promise<Record<OrderStatus, number>
   return counts;
 }
 
+/** Pesanan WhatsApp yang menunggu konfirmasi transfer. */
+export async function countWhatsAppPending(): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(order)
+    .where(and(eq(order.status, "pending_payment"), eq(order.paymentMethod, "whatsapp")));
+
+  return Number(row?.value ?? 0);
+}
+
 /** Pesanan yang menunggu disiapkan, terlama dulu. */
 export async function listOrdersToPrepare(limit = 5): Promise<AdminOrderRow[]> {
   const rows = await db
@@ -219,6 +242,7 @@ export async function listOrdersToPrepare(limit = 5): Promise<AdminOrderRow[]> {
       status: order.status,
       createdAt: order.createdAt,
       total: order.total,
+      paymentMethod: order.paymentMethod,
       customerName: customer.name,
       customerPhone: customer.phone,
       itemCount: sql<number>`(select count(*) from ${orderItem} where ${orderItem.orderId} = ${order.id})`,
@@ -233,7 +257,8 @@ export async function listOrdersToPrepare(limit = 5): Promise<AdminOrderRow[]> {
     id: row.id,
     number: row.number,
     status: row.status as OrderStatus,
-    statusLabel: orderStatusMeta[row.status as OrderStatus]?.label ?? row.status,
+    statusLabel: adminStatusLabel(row.status as OrderStatus, row.paymentMethod),
+    paymentMethod: row.paymentMethod,
     customerName: row.customerName,
     customerPhone: row.customerPhone,
     createdAtLabel: adminDateTimeLabel(row.createdAt),
@@ -362,8 +387,11 @@ export async function getAdminOrder(orderNumber: string): Promise<AdminOrderDeta
     id: row.id,
     number: row.number,
     status,
-    statusLabel: orderStatusMeta[status]?.label ?? status,
-    statusNote: orderStatusMeta[status]?.note ?? "",
+    statusLabel: adminStatusLabel(status, row.paymentMethod),
+    statusNote:
+      status === "pending_payment" && row.paymentMethod === "whatsapp"
+        ? "Menunggu konfirmasi transfer bank lewat WhatsApp."
+        : (orderStatusMeta[status]?.note ?? ""),
     createdAtLabel: adminDateTimeLabel(row.createdAt),
     updatedAtLabel: adminDateTimeLabel(row.updatedAt),
     expiresAtLabel: adminDateTimeLabel(row.expiresAt),
@@ -394,7 +422,9 @@ export async function getAdminOrder(orderNumber: string): Promise<AdminOrderDeta
       fromStatus: step.fromStatus,
       toStatus: step.toStatus,
       toLabel:
-        orderStatusMeta[step.toStatus as OrderStatus]?.label ?? step.toStatus,
+        step.toStatus === "pending_payment" && row.paymentMethod === "whatsapp"
+          ? "Menunggu konfirmasi"
+          : (orderStatusMeta[step.toStatus as OrderStatus]?.label ?? step.toStatus),
       changedBy: step.changedBy,
       note: step.note,
       timeLabel: adminClockLabel(step.createdAt),
@@ -408,7 +438,8 @@ export async function getAdminOrder(orderNumber: string): Promise<AdminOrderDeta
       createdLabel: adminDateTimeLabel(event.createdAt),
     })),
     actions: {
-      confirm: canAdminAct(status, "confirm", options),
+      confirm:
+        canAdminAct(status, "confirm", options) && row.expiresAt.getTime() > Date.now(),
       dispatch: canAdminAct(status, "dispatch", options),
       complete: canAdminAct(status, "complete", options),
       cancel: canAdminAct(status, "cancel", options),

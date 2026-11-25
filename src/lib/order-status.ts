@@ -73,7 +73,7 @@ export const orderStatusMeta: Record<OrderStatus, StatusMeta> = {
 
 export const orderFilters: { key: string; label: string; statuses?: OrderStatus[] }[] = [
   { key: "semua", label: "Semua" },
-  { key: "belum", label: "Belum dibayar", statuses: ["pending_payment"] },
+  { key: "belum", label: "Menunggu", statuses: ["pending_payment"] },
   { key: "diproses", label: "Diproses", statuses: ["paid", "processing"] },
   { key: "dikirim", label: "Dikirim", statuses: ["out_for_delivery"] },
   { key: "selesai", label: "Selesai", statuses: ["completed"] },
