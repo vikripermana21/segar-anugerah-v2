@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, LayoutDashboard, Package, Settings, Tags, Truck } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Package, Settings, Tags, Truck, Users } from "lucide-react";
 
 const groups = [
   {
@@ -26,7 +26,10 @@ const groups = [
   },
   {
     label: "Toko",
-    items: [{ href: "/admin/pengaturan", label: "Pengaturan", icon: Settings }],
+    items: [
+      { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
+      { href: "/admin/pengguna", label: "Pengguna admin", icon: Users },
+    ],
   },
 ];
 
