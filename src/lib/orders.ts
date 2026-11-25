@@ -305,7 +305,7 @@ export async function createOrder(
         );
         const total = subtotal + shippingFee - discount;
         const delivery = deliveryDateRule(now, setting?.orderCutoffHour ?? 16);
-        const whatsapp = setting?.paymentMode === "whatsapp";
+        const whatsapp = (setting?.paymentMode ?? "whatsapp") === "whatsapp";
         const expiresAt = orderExpiry(
           now,
           whatsapp ? WHATSAPP_HOLD_MINUTES : undefined,
