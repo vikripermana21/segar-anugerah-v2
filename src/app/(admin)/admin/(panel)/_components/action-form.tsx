@@ -16,13 +16,15 @@ export function ActionForm({
   submitLabel,
   pendingLabel = "Menyimpan…",
   className = "flex flex-col gap-3",
+  submitClassName = btnPrimary,
   resetKey,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   submitLabel: string;
   pendingLabel?: string;
   className?: string;
+  submitClassName?: string;
   resetKey?: string | number;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
@@ -39,7 +41,7 @@ export function ActionForm({
 
       {state.ok ? <p className="text-sm text-emerald-700">{state.ok}</p> : null}
 
-      <button type="submit" disabled={pending} className={btnPrimary}>
+      <button type="submit" disabled={pending} className={submitClassName}>
         {pending ? pendingLabel : submitLabel}
       </button>
     </form>
