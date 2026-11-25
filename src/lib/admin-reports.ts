@@ -24,7 +24,7 @@ const dayLabelFormat = new Intl.DateTimeFormat("id-ID", {
 });
 
 const rangeLabelFormat = new Intl.DateTimeFormat("id-ID", {
-  timeZone: "UTC",
+  timeZone: "Asia/Jakarta",
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -66,6 +66,16 @@ export type ReportRange = {
 export function defaultReportRange(now = new Date()): { fromKey: string; toKey: string } {
   const toKey = jakartaKey(now);
   return { fromKey: `${toKey.slice(0, 7)}-01`, toKey };
+}
+
+/** Rentang N hari terakhir termasuk hari ini, untuk grafik dashboard. */
+export function recentReportRange(
+  days: number,
+  now = new Date(),
+): { fromKey: string; toKey: string } {
+  const toKey = jakartaKey(now);
+  const span = Math.max(1, Math.min(Math.trunc(days) || 1, MAX_RANGE_DAYS));
+  return { fromKey: addDays(toKey, -(span - 1)), toKey };
 }
 
 /**

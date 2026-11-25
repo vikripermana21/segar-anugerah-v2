@@ -198,7 +198,10 @@ export const order = pgTable("orders", {
   cancelledReason: text("cancelled_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [index("orders_customer_status_idx").on(t.customerId, t.status)]);
+}, (t) => [
+  index("orders_customer_status_idx").on(t.customerId, t.status),
+  index("orders_status_created_idx").on(t.status, t.createdAt),
+]);
 
 export const orderItem = pgTable("order_item", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -213,7 +216,7 @@ export const orderItem = pgTable("order_item", {
   quantity: integer("quantity").notNull(),
   lineTotal: integer("line_total").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("order_item_order_id_idx").on(t.orderId)]);
 
 export const orderStatusHistory = pgTable("order_status_history", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -225,7 +228,10 @@ export const orderStatusHistory = pgTable("order_status_history", {
   changedBy: text("changed_by").notNull(),
   note: text("note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("order_status_history_order_created_idx").on(t.orderId, t.createdAt),
+  index("order_status_history_status_created_idx").on(t.toStatus, t.createdAt),
+]);
 
 export const paymentEvent = pgTable(
   "payment_event",

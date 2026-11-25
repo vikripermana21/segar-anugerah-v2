@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, LayoutDashboard, Package, Settings, Tags, Truck, Users } from "lucide-react";
+import {
+  BarChart3,
+  ClipboardList,
+  LayoutDashboard,
+  Package,
+  Settings,
+  Tags,
+  Truck,
+  Users,
+} from "lucide-react";
 
 const groups = [
   {
@@ -29,6 +38,7 @@ const groups = [
     items: [
       { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
       { href: "/admin/pengguna", label: "Pengguna admin", icon: Users },
+      { href: "/admin/laporan", label: "Laporan", icon: BarChart3 },
     ],
   },
 ];
