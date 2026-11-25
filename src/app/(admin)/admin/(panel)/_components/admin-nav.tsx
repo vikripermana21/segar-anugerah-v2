@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Settings, Tags, Truck } from "lucide-react";
+import { ClipboardList, LayoutDashboard, Package, Settings, Tags, Truck } from "lucide-react";
 
 const groups = [
   {
     label: null,
     items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Pesanan",
+    items: [{ href: "/admin/pesanan", label: "Daftar pesanan", icon: ClipboardList }],
   },
   {
     label: "Katalog",
