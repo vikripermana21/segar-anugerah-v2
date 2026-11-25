@@ -9,8 +9,8 @@ dunia visual. Sumber visual toko: [`design/segar-anugerah-client.pen`](design/se
 
 | Fase | Isi | Status |
 |---|---|---|
-| 1 | Fondasi: repo, skema, auth, seed, deploy | 🟡 staging live di Vercel + Neon; domain dan R2 belum |
-| — | Permukaan toko (desain `.pen`): 13 layar + keadaan kosong/memuat | 🟡 katalog, akun, dan alamat dari database; pesanan masih contoh |
+| 1 | Fondasi: repo, skema, auth, seed, deploy | 🟡 staging live di Vercel + Neon, foto di R2; domain belum |
+| — | Permukaan toko (desain `.pen`): 13 layar + keadaan kosong/memuat | ✅ katalog, akun, alamat, pesanan, dan pembayaran dari database |
 | 2 | Katalog & admin katalog | ✅ admin katalog + toko membaca katalog database |
 | 3 | Akun pembeli & keranjang | ✅ akun, alamat, checkout zona DB; keranjang tetap di perangkat |
 | 4 | Midtrans & pesanan | ✅ pesanan, kunci stok, Snap sandbox, webhook, kedaluwarsa |
@@ -154,8 +154,10 @@ src/
 ├── lib/
 │   ├── auth.ts               # sesi cookie httpOnly, bcrypt, normalisasi nomor
 │   ├── catalog.ts            # query katalog + pengaturan toko (server)
-│   ├── catalog-types.ts      # bentuk katalog + helper harga (aman untuk klien)
-│   └── store-data.ts         # pesanan, alamat, zona contoh + aturan ongkir
+│   ├── orders.ts             # pesanan, stok, status, dan pembayaran (server)
+│   ├── midtrans.ts           # Snap, verifikasi webhook, kedaluwarsa
+│   ├── r2.ts                 # URL unggah bertanda tangan + hapus foto
+│   └── store-data.ts         # helper rupiah, fakta toko, data contoh lama
 └── middleware.ts             # penjaga rute /admin
 public/products/              # foto contoh katalog
 scripts/seed.ts               # admin, pengaturan toko, katalog contoh
@@ -170,10 +172,8 @@ design/                       # .pen, wireframe, dan artefak desain
 - Kode berbahasa Inggris; teks antarmuka berbahasa Indonesia.
 - Katalog toko dibaca dari database lewat `src/lib/catalog.ts`; `pnpm db:seed` mengisi kategori
   dan 11 produk contoh bila tabelnya masih kosong.
-- Pesanan, akun, alamat, dan zona checkout dibaca dari database. Data contoh tersisa hanya untuk
-  alur pembayaran di `src/lib/store-data.ts`.
-- Pembayaran masih alur tampilan; Midtrans Snap, webhook, dan kedaluwarsa otomatis menyusul di
-  Fase 4. Tombol bayar belum membuat transaksi nyata.
+- Pesanan, akun, alamat, dan zona checkout dibaca dari database. Pembayaran memakai Midtrans Snap
+  sandbox; webhook terverifikasi dan pesanan kedaluwarsa otomatis mengembalikan stok.
 - `.env.local` tidak masuk git. Jangan pernah menaruh kunci Midtrans di repo.
 - Webhook Midtrans tidak bisa menjangkau `localhost`. Uji di preview Vercel: daftarkan
   `https://<preview>/api/webhooks/midtrans` di dashboard Midtrans, atau kirim notifikasi sendiri
