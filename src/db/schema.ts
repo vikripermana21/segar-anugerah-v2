@@ -30,6 +30,8 @@ export const orderStatusEnum = pgEnum("order_status", [
 
 export const subjectTypeEnum = pgEnum("subject_type", ["customer", "admin"]);
 
+export const paymentModeEnum = pgEnum("payment_mode", ["whatsapp", "midtrans"]);
+
 /* ------------------------------------------------------------------ */
 /* Admin & pembeli                                                     */
 /* ------------------------------------------------------------------ */
@@ -271,6 +273,10 @@ export const storeSetting = pgTable("store_setting", {
   freeShippingUntil: timestamp("free_shipping_until", { withTimezone: true }),
   freeShippingMinSubtotal: integer("free_shipping_min_subtotal").notNull().default(0),
   orderCutoffHour: integer("order_cutoff_hour").notNull().default(16),
+  paymentMode: paymentModeEnum("payment_mode").notNull().default("whatsapp"),
+  bankName: text("bank_name"),
+  bankAccountNumber: text("bank_account_number"),
+  bankAccountName: text("bank_account_name"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
