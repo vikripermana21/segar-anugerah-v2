@@ -210,6 +210,38 @@ export async function countOrdersByStatus(): Promise<Record<OrderStatus, number>
   return counts;
 }
 
+/** Pesanan yang menunggu disiapkan, terlama dulu. */
+export async function listOrdersToPrepare(limit = 5): Promise<AdminOrderRow[]> {
+  const rows = await db
+    .select({
+      id: order.id,
+      number: order.orderNumber,
+      status: order.status,
+      createdAt: order.createdAt,
+      total: order.total,
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      itemCount: sql<number>`(select count(*) from ${orderItem} where ${orderItem.orderId} = ${order.id})`,
+    })
+    .from(order)
+    .innerJoin(customer, eq(order.customerId, customer.id))
+    .where(inArray(order.status, ["paid", "processing"]))
+    .orderBy(asc(order.createdAt), asc(order.id))
+    .limit(limit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    number: row.number,
+    status: row.status as OrderStatus,
+    statusLabel: orderStatusMeta[row.status as OrderStatus]?.label ?? row.status,
+    customerName: row.customerName,
+    customerPhone: row.customerPhone,
+    createdAtLabel: adminDateTimeLabel(row.createdAt),
+    total: row.total,
+    itemCount: Number(row.itemCount),
+  }));
+}
+
 export type AdminOrderDetail = {
   id: string;
   number: string;
